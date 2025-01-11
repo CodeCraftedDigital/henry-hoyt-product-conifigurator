@@ -1,0 +1,59 @@
+.ccd-select {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+.ccd-form__label {
+    font-weight: bold;
+    font-size: 20px !important;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.ccd-step-number {
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background-color: var(--global-color-8);
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    line-height: 25px;
+    text-align: center;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+.ccd-size__container,
+.ccd-product-options__container{
+    margin-top:35px;
+}
+
+#ccd-size__block {
+    display:flex;
+    gap:30px;
+    flex-wrap:wrap;
+}
+#ccd-submit-btn {
+    color:#fff;
+    font-weight:bold;
+    width: 100%;
+    background: var(--global-color-8);
+    margin-top:35px;
+    border-radius:5px;
+}
+#ccd-submit-btn:disabled {
+    background:#009bda87;
+}
+
+.ccd-hidden {
+    transition: 0.3s;
+    opacity:0;
+}
+
+.ccd-fade-in {
+    transition: 0.3s;
+    opacity:1;
+}
