@@ -48,9 +48,28 @@ class ProductFormRenderer {
             </div>
 
             <div class="ccd-size__container">
-                <label class="ccd-form__label">
-                    <span class="ccd-step-number">2</span> Select sizes and quantities
-                </label>
+                <div class="ccd-size__container--size-guide">
+                    <div>
+                        <label class="ccd-form__label">
+                            <span class="ccd-step-number">2</span> Select sizes and quantities
+                        </label>
+                    </div>
+                    <div>
+                        <?php
+                        // Get the size guide file (assuming it's a file upload field)
+                        $size_guide_file = get_field('product_size_guide', $this->product->get_id());
+
+                        // Check if the field has a valid file (array and 'url' key exist)
+                        if ($size_guide_file && !empty($size_guide_file['url'])): ?>
+                            <a href="<?php echo esc_url($size_guide_file['url']); ?>" target="_blank" class="ccd-size-guide-btn">
+                                View Size Guide
+                            </a>
+                        <?php endif; ?>
+
+                    </div>
+
+                </div>
+
                 <div id="ccd-size__block">
                     <!-- Sizes Will Append Here -->
                 </div>
