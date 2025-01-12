@@ -13,9 +13,12 @@
         this.filteredColor = null;
 
         //Product Add Ons
-        this.rightChestLogoEnabled = '';
-        this.rightChestLogoSelector = document.getElementById('ccd-right-chest-logo');
-        this.rightChestLogoContainer = document.getElementById('ccd-addon-img-container');
+        // this.rightChestLogoEnabled = '';
+        this.rightChestLogoSelectorSp = document.getElementById('ccd-right-chest-logo-sp');
+        this.rightChestLogoContainerSp = document.getElementById('ccd-addon-img-container-sp');
+
+        this.rightChestLogoSelectorEm = document.getElementById('ccd-right-chest-logo-em');
+        this.rightChestLogoContainerEm = document.getElementById('ccd-addon-img-container-em');
 
 
         this.events();
@@ -51,8 +54,12 @@
             this.toggleAddToCartButton();
         });
 
-        this.rightChestLogoSelector.addEventListener('change', (e) => {
-            this.handleRightChestLogo(e.target.value);
+        this.rightChestLogoSelectorSp.addEventListener('change', (e) => {
+            this.handleRightChestLogoSp(e.target.value);
+        });
+
+        this.rightChestLogoSelectorEm.addEventListener('change', (e) => {
+            this.handleRightChestLogoEm(e.target.value);
         });
 
 
@@ -60,11 +67,20 @@
 
     }
 
-     handleRightChestLogo(selectedOption) {
-         if (selectedOption === 'HGH Logo') {
-             this.rightChestLogoContainer.classList.remove('ccd-hidden');
+     handleRightChestLogoSp(selectedOption) {
+         if (selectedOption === 'HFH Logo') {
+             this.rightChestLogoContainerSp.classList.remove('ccd-hidden');
          } else {
-             this.rightChestLogoContainer.classList.add('ccd-hidden');
+             this.rightChestLogoContainerSp.classList.add('ccd-hidden');
+         }
+     }
+
+
+     handleRightChestLogoEm(selectedOption) {
+         if (selectedOption === 'HFH Logo') {
+             this.rightChestLogoContainerEm.classList.remove('ccd-hidden');
+         } else {
+             this.rightChestLogoContainerEm.classList.add('ccd-hidden');
          }
      }
 
