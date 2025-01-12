@@ -9,34 +9,29 @@ class ProductFormRenderer {
         $this->variationsFetcher = $variationsFetcher;
     }
 
-    // Render the empty form for variable products
     public function render_empty_form() {
-        // Ensure we are on a product page and it's a variable product
         if (!is_product() || !$this->product->is_type('variable')) {
             return;
         }
 
-        // Check if the form has been submitted
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['size_quantities'])) {
-            // Process the form data and add to cart
-//            $this->add_to_cart($_POST['size_quantities']);
-            $this->dump_form_fields();
+            $this->add_to_cart($_POST['size_quantities']);
         }
 
-        // Get the product ID dynamically
         $product_id = $this->product->get_id();
 
-        // Add custom CSS to hide the WooCommerce default variations form
         echo '<style>
             .variations_form.cart {
                 display: none !important;
             }
         </style>';
 
-        // Display WooCommerce Notices (Make sure this is in the correct position in your theme)
         wc_print_notices();
-
         ?>
+
+
+
+
         <form id="ccd-form" data-product-id="<?php echo esc_attr($product_id); ?>" method="POST">
             <div>
                 <label for="color" class="ccd-form__label">
@@ -174,89 +169,98 @@ class ProductFormRenderer {
 
             <button id="ccd-submit-btn" type="submit">Add To Cart</button>
         </form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         <?php
     }
 
-    // Function to add variations to the WooCommerce cart
     private function add_to_cart($quantities) {
-        // Check if the quantities array is not empty
         if (empty($quantities)) {
             wc_add_notice(__('Please select at least one variation.', 'ccd-product-options'), 'error');
-            wp_redirect(get_permalink($this->product->get_id()));
-            exit;
+            return;
         }
 
-        // Loop through each variation and quantity
         foreach ($quantities as $variation_id => $quantity) {
-
-            // Ensure the variation ID is valid and the quantity is greater than 0
             if ($quantity > 0) {
-                // Check if the variation exists
                 $variation = wc_get_product($variation_id);
                 if ($variation && $variation->exists() && $variation->is_in_stock()) {
-                    // Add each valid variation to the cart
-                    WC()->cart->add_to_cart($variation_id, $quantity);
+                    $cart_item_data = [];
+                    if (!empty($_POST['department_name_left_chest_value'])) {
+                        $cart_item_data['department_name_upcharge'] = 8;
+                        $cart_item_data['department_name_left_chest_value'] = sanitize_text_field($_POST['department_name_left_chest_value']);
+                    }
+                    WC()->cart->add_to_cart($variation_id, $quantity, 0, [], $cart_item_data);
                 } else {
                     wc_add_notice(__('One or more variations are invalid or out of stock.', 'ccd-product-options'), 'error');
-                    wp_redirect(get_permalink($this->product->get_id()));
-                    exit;
+                    return;
                 }
             }
         }
 
-        // If no variations were added, show an error
         if (WC()->cart->is_empty()) {
             wc_add_notice(__('No items were added to your cart. Please try again.', 'ccd-product-options'), 'error');
-            wp_redirect(get_permalink($this->product->get_id()));
-            exit;
+            return;
         } else {
-            // Add success message
             wc_add_notice(__('Products added to your cart.', 'ccd-product-options'), 'success');
-            wp_redirect(get_permalink($this->product->get_id())); // Redirect to the same page after adding
-            exit;
-        }
-    }
-
-    // Helper function to dump the current cart for debugging purposes
-    public function dump_cart() {
-        echo '<pre>';
-        print_r(WC()->cart->get_cart());  // Dump the cart contents
-        echo '</pre>';
-    }
-
-
-
-
-    // Function to dump the submitted form fields
-    public function dump_form_fields() {
-        echo '<h3>Form Data Submitted:</h3>';
-        echo '<pre>';
-
-        // Dump the form fields (color, product options, size quantities)
-        $fields = [
-            'color' => $_POST['color'] ?? null,
-            'right_chest_screen_print' => $_POST['right_chest_screen_print'] ?? null,
-            'right_chest_embroidery' => $_POST['right_chest_embroidery'] ?? null,
-            'department_name_left_chest' => $_POST['department_name_left_chest'] ?? null,
-            'department_name_left_chest_value' => $_POST['department_name_left_chest_value'] ?? null,
-            'department_name_back' => $_POST['department_name_back'] ?? null,
-            'department_name_back_value' => $_POST['department_name_back_value'] ?? null,
-        ];
-
-        // Dump the size quantities (this loops through the submitted sizes)
-        if (isset($_POST['size_quantities']) && is_array($_POST['size_quantities'])) {
-            $fields['size_quantities'] = [];
-            foreach ($_POST['size_quantities'] as $size => $quantity) {
-                $fields['size_quantities'][$size] = $quantity;
-            }
         }
 
-        // Print all the fields, including sizes
-        print_r($fields);
-        echo '</pre>';
+        wp_redirect(get_permalink($this->product->get_id()));
+        exit;
     }
-
 }
 
-?>
+// WooCommerce hooks for applying upcharge logic
+add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product_id) {
+    if (!empty($_POST['department_name_left_chest_value'])) {
+        $cart_item_data['department_name_upcharge'] = 8;
+        $cart_item_data['department_name_left_chest_value'] = sanitize_text_field($_POST['department_name_left_chest_value']);
+    }
+    return $cart_item_data;
+}, 10, 2);
 
+add_action('woocommerce_before_calculate_totals', function ($cart) {
+    if (is_admin() && !defined('DOING_AJAX')) return;
+
+    foreach ($cart->get_cart() as $cart_item) {
+        if (isset($cart_item['department_name_upcharge'])) {
+            $cart_item['data']->set_price($cart_item['data']->get_price() + $cart_item['department_name_upcharge']);
+        }
+    }
+});
+
+add_filter('woocommerce_get_item_data', function ($item_data, $cart_item) {
+    if (isset($cart_item['department_name_left_chest_value'])) {
+        $item_data[] = [
+            'key' => 'Department Name Left Chest',
+            'value' => $cart_item['department_name_left_chest_value']
+        ];
+    }
+    return $item_data;
+}, 10, 2);
+
+add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart_item_key, $values, $order) {
+    if (isset($values['department_name_left_chest_value'])) {
+        $item->add_meta_data('Department Name Left Chest', $values['department_name_left_chest_value'], true);
+    }
+    if (isset($values['department_name_upcharge'])) {
+        $item->add_meta_data('Upcharge', wc_price($values['department_name_upcharge']), true);
+    }
+}, 10, 4);
+?>
