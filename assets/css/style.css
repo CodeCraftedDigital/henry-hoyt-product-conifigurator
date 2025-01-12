@@ -102,6 +102,11 @@
     border-radius: 5px!important;
 }
 
-#ccd-department-name-left-chest {
+#ccd-department-name-left-chest
+{
     margin-bottom:30px;
+}
+
+#ccd-department-img-back {
+    margin-top:30px;
 }

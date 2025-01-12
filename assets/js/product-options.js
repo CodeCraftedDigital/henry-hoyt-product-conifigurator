@@ -27,6 +27,11 @@
         this.departmentNameLeftChestInputName = document.getElementById('ccd-department-name-left-chest');
 
 
+        this.departmentNameBackSelector = document.getElementById('department-name-back');
+        this.departmentNameBackContainer = document.getElementById('ccd-addon-department-name-back-container');
+        this.departmentNameBackInput = document.getElementById('ccd-department-name-back');
+
+
         this.events();
         this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
         // this.wooGalleryImg = document.querySelector('.woocommerce-product-gallery__wrapper > div');
@@ -75,10 +80,27 @@
             console.log(e.target.value);
         });
 
+        this.departmentNameBackSelector.addEventListener('change', (e) => {
+            this.handleDepartmentNameBack(e.target.value)
+            console.log(e.target.value);
+        });
+
 
 
 
     }
+
+
+
+     handleDepartmentNameBack(selectedOption) {
+         if (selectedOption === 'none') {
+             this.departmentNameBackContainer.classList.add('ccd-hidden');
+             this.departmentNameBackInput.required = false;
+         } else {
+             this.departmentNameBackContainer.classList.remove('ccd-hidden');
+             this.departmentNameBackInput.required = true;
+         }
+     }
 
 
      handleDepartmentNameLeftChest(selectedOption) {

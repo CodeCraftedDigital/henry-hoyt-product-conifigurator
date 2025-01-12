@@ -75,10 +75,26 @@ class ProductFormRenderer {
                 </div>
             </div>
 
+
+
+
+
+
+
+
+
+
+
+        <?php if (get_field('enable_po_section')): ?>
+
+
             <div class="ccd-product-options__container">
                 <label class="ccd-form__label">
                     <span class="ccd-step-number">3</span> Product Options
                 </label>
+
+
+
 
             <!--      Product Add Ons          -->
                 <?php if (get_field('right_chest_logo_sp')): ?>
@@ -142,7 +158,26 @@ class ProductFormRenderer {
 
 
 
+                <?php if (get_field('dp_name_back')): ?>
+                    <div class="ccd-addon-container">
+                        <div class="ccd-addon-item">
+                            <label class="ccd-addon-label" for="">Add Department Name Back</label>
+                            <select class="ccd-select" name="" id="department-name-back" required>
+                                <option value="none">No Department Name</option>
+                                <option value="yes">Add Department Name - Back</option>
+                            </select>
+                            <div id="ccd-addon-department-name-back-container" class="ccd-hidden">
+                                <input id="ccd-department-name-back" name="department-name-back-value" class="ccd-input" type="text" placeholder="Enter Department Name...">
+                                <img id="ccd-department-img-back" class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/Department-name-back.jpg'; ?>" alt="HFH Right Chest Logo">
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+
+
             </div>
+        <?php endif; ?>
 
             <button id="ccd-submit-btn" type="submit">Add To Cart</button>
         </form>
