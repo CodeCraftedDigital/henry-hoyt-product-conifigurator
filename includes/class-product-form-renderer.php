@@ -124,6 +124,23 @@ class ProductFormRenderer {
 
 
 
+                <?php if (get_field('right_chest_logo_em')): ?>
+                    <div class="ccd-addon-container">
+                        <div class="ccd-addon-item">
+                            <label class="ccd-addon-label" for="">Add Department Name Left Chest <span class="ccd-add-on-upcharge">(+4.00)</span> </label>
+                            <select class="ccd-select" name="" id="department-name-left-chest" required>
+                                <option value="none">No Department Name</option>
+                                <option value="Left Chest">Left Chest</option>
+                            </select>
+                            <div id="ccd-addon-department-name-container" class="ccd-hidden">
+                                <input id="ccd-department-name-left-chest" name="department-name-left-chest-value" class="ccd-input" type="text" placeholder="Enter Department Name...">
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+
+
             </div>
 
             <button id="ccd-submit-btn" type="submit">Add To Cart</button>

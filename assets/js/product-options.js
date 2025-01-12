@@ -21,6 +21,12 @@
         this.rightChestLogoContainerEm = document.getElementById('ccd-addon-img-container-em');
 
 
+        this.departmentNameLeftChestSelector = document.getElementById('department-name-left-chest');
+        this.departmentNameLeftChestContainer = document.getElementById('ccd-addon-department-name-container')
+        this.departmentNameLeftChestinputValue = document.getElementById('department-name-left-chest-value');
+        this.departmentNameLeftChestInputName = document.getElementById('ccd-department-name-left-chest');
+
+
         this.events();
         this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
         // this.wooGalleryImg = document.querySelector('.woocommerce-product-gallery__wrapper > div');
@@ -64,8 +70,28 @@
 
 
 
+        this.departmentNameLeftChestSelector.addEventListener('change', (e) => {
+            this.handleDepartmentNameLeftChest(e.target.value);
+            console.log(e.target.value);
+        });
+
+
+
 
     }
+
+
+     handleDepartmentNameLeftChest(selectedOption) {
+         if (selectedOption === 'none') {
+             this.departmentNameLeftChestContainer.classList.add('ccd-hidden');
+             this.departmentNameLeftChestInputName.required = false;
+         } else {
+             this.departmentNameLeftChestContainer.classList.remove('ccd-hidden');
+             this.departmentNameLeftChestInputName.required = true;
+         }
+     }
+
+
 
      handleRightChestLogoSp(selectedOption) {
          if (selectedOption === 'HFH Logo') {
