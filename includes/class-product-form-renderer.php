@@ -124,7 +124,7 @@ class ProductFormRenderer {
 
 
 
-                <?php if (get_field('right_chest_logo_em')): ?>
+                <?php if (get_field('dp_name_left_chest')): ?>
                     <div class="ccd-addon-container">
                         <div class="ccd-addon-item">
                             <label class="ccd-addon-label" for="">Add Department Name Left Chest <span class="ccd-add-on-upcharge">(+4.00)</span> </label>
@@ -134,6 +134,7 @@ class ProductFormRenderer {
                             </select>
                             <div id="ccd-addon-department-name-container" class="ccd-hidden">
                                 <input id="ccd-department-name-left-chest" name="department-name-left-chest-value" class="ccd-input" type="text" placeholder="Enter Department Name...">
+                                <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/Department-name-left-chest.jpg'; ?>" alt="HFH Right Chest Logo">
                             </div>
                         </div>
                     </div>
