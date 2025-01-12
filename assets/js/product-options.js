@@ -65,28 +65,31 @@
             this.toggleAddToCartButton();
         });
 
-        this.rightChestLogoSelectorSp.addEventListener('change', (e) => {
-            this.handleRightChestLogoSp(e.target.value);
-        });
+        if (this.rightChestLogoSelectorSp) {
+            this.rightChestLogoSelectorSp.addEventListener('change', (e) => {
+                this.handleRightChestLogoSp(e.target.value);
+            });
+        }
 
-        this.rightChestLogoSelectorEm.addEventListener('change', (e) => {
-            this.handleRightChestLogoEm(e.target.value);
-        });
+        if(this.rightChestLogoSelectorEm) {
+            this.rightChestLogoSelectorEm.addEventListener('change', (e) => {
+                this.handleRightChestLogoEm(e.target.value);
+            });
+        }
 
+        if(this.departmentNameLeftChestSelector){
+            this.departmentNameLeftChestSelector.addEventListener('change', (e) => {
+                this.handleDepartmentNameLeftChest(e.target.value);
+                console.log(e.target.value);
+            });
+        }
 
-
-        this.departmentNameLeftChestSelector.addEventListener('change', (e) => {
-            this.handleDepartmentNameLeftChest(e.target.value);
-            console.log(e.target.value);
-        });
-
-        this.departmentNameBackSelector.addEventListener('change', (e) => {
-            this.handleDepartmentNameBack(e.target.value)
-            console.log(e.target.value);
-        });
-
-
-
+        if(this.departmentNameBackSelector) {
+            this.departmentNameBackSelector.addEventListener('change', (e) => {
+                this.handleDepartmentNameBack(e.target.value)
+                console.log(e.target.value);
+            });
+        }
 
     }
 
