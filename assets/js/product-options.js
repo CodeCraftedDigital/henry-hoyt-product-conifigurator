@@ -6,11 +6,15 @@
         this.colorOptionsSelect = document.getElementById('color-options');
         this.sizeOptionsContainer = document.getElementById('ccd-size__block');
         this.sizeMainContainer = document.getElementById('ccd-size__container');
+        this.currentImg = '';
         this.addToCartBtn = document.getElementById('ccd-submit-btn');
         this.selectedColor = '';
         this.colors = [];
         this.filteredColor = null;
         this.events();
+        this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
+        // this.wooGalleryImg = document.querySelector('.woocommerce-product-gallery__wrapper > div');
+        // console.log(this.wooGallery);
     }
 
     events() {
@@ -20,13 +24,31 @@
 
             // Call filter and log the filtered result
             const filtered = this.filterSelectedColor(this.selectedColor);
-            console.log(filtered);
+
             this.buildSelectedColorSizes(filtered);
+            // Woo Img
+            this.currentImg = filtered.variations[0].image;
+            console.log(this.currentImg);
+            this.wooGallery.setAttribute('data-thumb', `${this.currentImg}`)
+            this.wooGallery.setAttribute('data-thumb-srcset', `${this.currentImg}`)
+            this.wooGallery.classList.remove('flex-active-slide');
+            this.wooGallery.firstChild.setAttribute('href', `${this.currentImg}`);
+            this.wooGallery.firstChild.firstChild.setAttribute('href', `${this.currentImg}`);
+            this.wooGallery.firstChild.firstChild.setAttribute('data-src', `${this.currentImg}`);
+            this.wooGallery.firstChild.firstChild.setAttribute('data-large_image', `${this.currentImg}`);
+            this.wooGallery.firstChild.firstChild.setAttribute('srcset', `${this.currentImg}`);
+
+
+            // console.log(filtered)
 
             // Handle Button State
             this.toggleAddToCartButton();
         });
     }
+
+     updateProductImage() {
+
+     }
 
     async getAllAvailableColors(id) {
         try {
@@ -55,6 +77,7 @@
         this.filteredColor = filtered[0] || null;
         return this.filteredColor;
     }
+
 
     buildSelectedColorSizes(item) {
         this.sizeOptionsContainer.innerHTML = ''; // Clear previous sizes
