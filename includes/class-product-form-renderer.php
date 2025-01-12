@@ -86,16 +86,10 @@ class ProductFormRenderer {
 
 
         <?php if (get_field('enable_po_section')): ?>
-
-
             <div class="ccd-product-options__container">
                 <label class="ccd-form__label">
                     <span class="ccd-step-number">3</span> Product Options
                 </label>
-
-
-
-
             <!--      Product Add Ons          -->
                 <?php if (get_field('right_chest_logo_sp')): ?>
                     <div class="ccd-addon-container">
@@ -111,7 +105,6 @@ class ProductFormRenderer {
                        </div>
                     </div>
                 <?php endif; ?>
-
 
                 <?php if (get_field('right_chest_logo_em')): ?>
                     <div class="ccd-addon-container">
@@ -139,7 +132,6 @@ class ProductFormRenderer {
                 <?php endif; ?>
 
 
-
                 <?php if (get_field('dp_name_left_chest')): ?>
                     <div class="ccd-addon-container">
                         <div class="ccd-addon-item">
@@ -155,7 +147,6 @@ class ProductFormRenderer {
                         </div>
                     </div>
                 <?php endif; ?>
-
 
 
                 <?php if (get_field('dp_name_back')): ?>
