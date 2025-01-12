@@ -11,10 +11,20 @@
         this.selectedColor = '';
         this.colors = [];
         this.filteredColor = null;
+
+        //Product Add Ons
+        this.rightChestLogoEnabled = '';
+        this.rightChestLogoSelector = document.getElementById('ccd-right-chest-logo');
+        this.rightChestLogoContainer = document.getElementById('ccd-addon-img-container');
+
+
         this.events();
         this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
         // this.wooGalleryImg = document.querySelector('.woocommerce-product-gallery__wrapper > div');
         // console.log(this.wooGallery);
+
+
+
     }
 
     events() {
@@ -37,17 +47,25 @@
             this.wooGallery.firstChild.firstChild.setAttribute('data-src', `${this.currentImg}`);
             this.wooGallery.firstChild.firstChild.setAttribute('data-large_image', `${this.currentImg}`);
             this.wooGallery.firstChild.firstChild.setAttribute('srcset', `${this.currentImg}`);
-
-
-            // console.log(filtered)
-
             // Handle Button State
             this.toggleAddToCartButton();
         });
+
+        this.rightChestLogoSelector.addEventListener('change', (e) => {
+            this.handleRightChestLogo(e.target.value);
+        });
+
+
+
+
     }
 
-     updateProductImage() {
-
+     handleRightChestLogo(selectedOption) {
+         if (selectedOption === 'HGH Logo') {
+             this.rightChestLogoContainer.classList.remove('ccd-hidden');
+         } else {
+             this.rightChestLogoContainer.classList.add('ccd-hidden');
+         }
      }
 
     async getAllAvailableColors(id) {

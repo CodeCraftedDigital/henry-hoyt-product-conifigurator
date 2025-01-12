@@ -7,6 +7,9 @@ Author: Your Name
 Text Domain: ccd-product-options
 */
 
+// In your main plugin file (ccd-product-options.php)
+define( 'CCD_PLUGIN_URL', plugin_dir_url( __FILE__ ) . 'assets/' );
+
 // Include the Interface files first
 require_once plugin_dir_path(__FILE__) . 'includes/interface-enqueuable.php'; // Enqueuable interface
 require_once plugin_dir_path(__FILE__) . 'includes/interface-product-variations-fetcher.php'; // ProductVariationsFetcher interface

@@ -51,6 +51,7 @@
 .ccd-hidden {
     transition: 0.3s;
     opacity:0;
+    display:none;
 }
 
 .ccd-fade-in {
@@ -71,4 +72,20 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
+}
+
+.ccd-addon-label {
+    font-weight: bold;
+    margin-top:30px;
+
+}
+
+.ccd-addon-item {
+    display:flex;
+    flex-direction: column;
+    gap:15px;
+}
+
+.ccd-addon-img {
+    width:33%;
 }

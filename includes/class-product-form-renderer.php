@@ -79,6 +79,25 @@ class ProductFormRenderer {
                 <label class="ccd-form__label">
                     <span class="ccd-step-number">3</span> Product Options
                 </label>
+
+            <!--      Product Add Ons          -->
+                <?php if (get_field('right_chest_logo')): ?>
+                    <div class="ccd-addon-container">
+                       <div class="ccd-addon-item">
+                           <label class="ccd-addon-label" for="">Right Chest - Screen Print</label>
+                           <select class="ccd-select" name="" id="ccd-right-chest-logo" required>
+                               <option value="Blank">Blank</option>
+                               <option value="HGH Logo">HGH Logo</option>
+                           </select>
+                           <div id="ccd-addon-img-container" class="ccd-hidden">
+                               <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/right-chest-logo.jpg'; ?>" alt="HFH Right Chest Logo">
+                           </div>
+                       </div>
+                    </div>
+                <?php endif; ?>
+
+
+
             </div>
 
             <button id="ccd-submit-btn" type="submit">Add To Cart</button>
