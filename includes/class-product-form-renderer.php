@@ -85,90 +85,90 @@ class ProductFormRenderer {
 
 
 
-        <?php if (get_field('enable_po_section')): ?>
-            <div class="ccd-product-options__container">
-                <label class="ccd-form__label">
-                    <span class="ccd-step-number">3</span> Product Options
-                </label>
-            <!--      Product Add Ons          -->
-                <?php if (get_field('right_chest_logo_sp')): ?>
-                    <div class="ccd-addon-container">
-                       <div class="ccd-addon-item">
-                           <label class="ccd-addon-label" for="">Right Chest - Screen Print</label>
-                           <select class="ccd-select" name="" id="ccd-right-chest-logo-sp" required>
-                               <option value="Blank">Blank</option>
-                               <option value="HFH Logo">HFH Logo</option>
-                           </select>
-                           <div id="ccd-addon-img-container-sp" class="ccd-hidden">
-                               <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/right-chest-logo.jpg'; ?>" alt="HFH Right Chest Logo">
-                           </div>
-                       </div>
-                    </div>
-                <?php endif; ?>
-
-                <?php if (get_field('right_chest_logo_em')): ?>
-                    <div class="ccd-addon-container">
-                        <div class="ccd-addon-item">
-                            <label class="ccd-addon-label" for="">Right Chest - Embroidery</label>
-                            <select class="ccd-select" name="" id="ccd-right-chest-logo-em" required>
-                                <option value="Blank">Blank</option>
-                                <option value="HFH Logo">HFH Logo</option>
-                            </select>
-                            <div id="ccd-addon-img-container-em" class="ccd-hidden">
-                                <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/right-chest-logo.jpg'; ?>" alt="HFH Right Chest Logo">
+            <?php if (get_field('enable_po_section')): ?>
+                <div class="ccd-product-options__container">
+                    <label class="ccd-form__label">
+                        <span class="ccd-step-number">3</span> Product Options
+                    </label>
+                    <!--      Product Add Ons          -->
+                    <?php if (get_field('right_chest_logo_sp')): ?>
+                        <div class="ccd-addon-container">
+                            <div class="ccd-addon-item">
+                                <label class="ccd-addon-label" for="">Right Chest - Screen Print</label>
+                                <select class="ccd-select" name="" id="ccd-right-chest-logo-sp" required>
+                                    <option value="Blank">Blank</option>
+                                    <option value="HFH Logo">HFH Logo</option>
+                                </select>
+                                <div id="ccd-addon-img-container-sp" class="ccd-hidden">
+                                    <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/right-chest-logo.jpg'; ?>" alt="HFH Right Chest Logo">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
 
-                <!--      Add Personalized Name Left Chest           -->
-                <?php if (get_field('left_chest_pn')): ?>
-                    <div class="ccd-addon-container">
-                        <div class="ccd-addon-item">
-                            <label class="ccd-addon-label" for="">Add Personalized Name Left Chest <span class="ccd-add-on-upcharge">(+8.00)</span> </label>
-                            <input name="left-chase-personal-name" class="ccd-input" type="text" placeholder="Enter Your Name...">
-                        </div>
-                    </div>
-                <?php endif; ?>
-
-
-                <?php if (get_field('dp_name_left_chest')): ?>
-                    <div class="ccd-addon-container">
-                        <div class="ccd-addon-item">
-                            <label class="ccd-addon-label" for="">Add Department Name Left Chest <span class="ccd-add-on-upcharge">(+4.00)</span> </label>
-                            <select class="ccd-select" name="" id="department-name-left-chest" required>
-                                <option value="none">No Department Name</option>
-                                <option value="Left Chest">Left Chest</option>
-                            </select>
-                            <div id="ccd-addon-department-name-container" class="ccd-hidden">
-                                <input id="ccd-department-name-left-chest" name="department-name-left-chest-value" class="ccd-input" type="text" placeholder="Enter Department Name...">
-                                <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/Department-name-left-chest.jpg'; ?>" alt="HFH Right Chest Logo">
+                    <?php if (get_field('right_chest_logo_em')): ?>
+                        <div class="ccd-addon-container">
+                            <div class="ccd-addon-item">
+                                <label class="ccd-addon-label" for="">Right Chest - Embroidery</label>
+                                <select class="ccd-select" name="" id="ccd-right-chest-logo-em" required>
+                                    <option value="Blank">Blank</option>
+                                    <option value="HFH Logo">HFH Logo</option>
+                                </select>
+                                <div id="ccd-addon-img-container-em" class="ccd-hidden">
+                                    <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/right-chest-logo.jpg'; ?>" alt="HFH Right Chest Logo">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
 
-
-                <?php if (get_field('dp_name_back')): ?>
-                    <div class="ccd-addon-container">
-                        <div class="ccd-addon-item">
-                            <label class="ccd-addon-label" for="">Add Department Name Back</label>
-                            <select class="ccd-select" name="" id="department-name-back" required>
-                                <option value="none">No Department Name</option>
-                                <option value="yes">Add Department Name - Back</option>
-                            </select>
-                            <div id="ccd-addon-department-name-back-container" class="ccd-hidden">
-                                <input id="ccd-department-name-back" name="department-name-back-value" class="ccd-input" type="text" placeholder="Enter Department Name...">
-                                <img id="ccd-department-img-back" class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/Department-name-back.jpg'; ?>" alt="HFH Right Chest Logo">
+                    <!--      Add Personalized Name Left Chest           -->
+                    <?php if (get_field('left_chest_pn')): ?>
+                        <div class="ccd-addon-container">
+                            <div class="ccd-addon-item">
+                                <label class="ccd-addon-label" for="">Add Personalized Name Left Chest <span class="ccd-add-on-upcharge">(+8.00)</span> </label>
+                                <input name="left-chase-personal-name" class="ccd-input" type="text" placeholder="Enter Your Name...">
                             </div>
                         </div>
-                    </div>
-                <?php endif; ?>
+                    <?php endif; ?>
+
+
+                    <?php if (get_field('dp_name_left_chest')): ?>
+                        <div class="ccd-addon-container">
+                            <div class="ccd-addon-item">
+                                <label class="ccd-addon-label" for="">Add Department Name Left Chest <span class="ccd-add-on-upcharge">(+4.00)</span> </label>
+                                <select class="ccd-select" name="" id="department-name-left-chest" required>
+                                    <option value="none">No Department Name</option>
+                                    <option value="Left Chest">Left Chest</option>
+                                </select>
+                                <div id="ccd-addon-department-name-container" class="ccd-hidden">
+                                    <input id="ccd-department-name-left-chest" name="department-name-left-chest-value" class="ccd-input" type="text" placeholder="Enter Department Name...">
+                                    <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/Department-name-left-chest.jpg'; ?>" alt="HFH Right Chest Logo">
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+
+                    <?php if (get_field('dp_name_back')): ?>
+                        <div class="ccd-addon-container">
+                            <div class="ccd-addon-item">
+                                <label class="ccd-addon-label" for="">Add Department Name Back</label>
+                                <select class="ccd-select" name="" id="department-name-back" required>
+                                    <option value="none">No Department Name</option>
+                                    <option value="yes">Add Department Name - Back</option>
+                                </select>
+                                <div id="ccd-addon-department-name-back-container" class="ccd-hidden">
+                                    <input id="ccd-department-name-back" name="department-name-back-value" class="ccd-input" type="text" placeholder="Enter Department Name...">
+                                    <img id="ccd-department-img-back" class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/Department-name-back.jpg'; ?>" alt="HFH Right Chest Logo">
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
 
 
-            </div>
-        <?php endif; ?>
+                </div>
+            <?php endif; ?>
 
             <button id="ccd-submit-btn" type="submit">Add To Cart</button>
         </form>
@@ -223,3 +223,4 @@ class ProductFormRenderer {
 }
 
 ?>
+

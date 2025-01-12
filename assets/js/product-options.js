@@ -93,8 +93,6 @@
 
     }
 
-
-
      handleDepartmentNameBack(selectedOption) {
          if (selectedOption === 'none') {
              this.departmentNameBackContainer.classList.add('ccd-hidden');
