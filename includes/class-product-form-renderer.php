@@ -19,7 +19,8 @@ class ProductFormRenderer {
         // Check if the form has been submitted
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['size_quantities'])) {
             // Process the form data and add to cart
-            $this->add_to_cart($_POST['size_quantities']);
+//            $this->add_to_cart($_POST['size_quantities']);
+            $this->dump_form_fields();
         }
 
         // Get the product ID dynamically
@@ -41,7 +42,7 @@ class ProductFormRenderer {
                 <label for="color" class="ccd-form__label">
                     <span class="ccd-step-number">1</span> Choose your color
                 </label>
-                <select id="color-options" class="ccd-select" required>
+                <select name="color" id="color-options" class="ccd-select" required>
                     <option value="Please Choose A Color" selected>Please Choose A Color</option>
                     <!-- Color options will be appended here -->
                 </select>
@@ -95,7 +96,7 @@ class ProductFormRenderer {
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label" for="">Right Chest - Screen Print</label>
-                                <select class="ccd-select" name="" id="ccd-right-chest-logo-sp" required>
+                                <select class="ccd-select" name="right_chest_screen_print" id="ccd-right-chest-logo-sp" required>
                                     <option value="Blank">Blank</option>
                                     <option value="HFH Logo">HFH Logo</option>
                                 </select>
@@ -106,11 +107,12 @@ class ProductFormRenderer {
                         </div>
                     <?php endif; ?>
 
+                    <!-- Right Chest Embroidery  -->
                     <?php if (get_field('right_chest_logo_em')): ?>
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label" for="">Right Chest - Embroidery</label>
-                                <select class="ccd-select" name="" id="ccd-right-chest-logo-em" required>
+                                <select class="ccd-select" name="right_chest_embroidery" id="ccd-right-chest-logo-em" required>
                                     <option value="Blank">Blank</option>
                                     <option value="HFH Logo">HFH Logo</option>
                                 </select>
@@ -121,44 +123,44 @@ class ProductFormRenderer {
                         </div>
                     <?php endif; ?>
 
-                    <!--      Add Personalized Name Left Chest           -->
+                    <!-- Add Personalized Name Left Chest -->
                     <?php if (get_field('left_chest_pn')): ?>
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label" for="">Add Personalized Name Left Chest <span class="ccd-add-on-upcharge">(+8.00)</span> </label>
-                                <input name="left-chase-personal-name" class="ccd-input" type="text" placeholder="Enter Your Name...">
+                                <input name="personalized_name_left_chest" class="ccd-input" type="text" placeholder="Enter Your Name...">
                             </div>
                         </div>
                     <?php endif; ?>
 
-
+                    <!--  Department Name Left Chest -->
                     <?php if (get_field('dp_name_left_chest')): ?>
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label" for="">Add Department Name Left Chest <span class="ccd-add-on-upcharge">(+4.00)</span> </label>
-                                <select class="ccd-select" name="" id="department-name-left-chest" required>
+                                <select class="ccd-select" name="department_name_left_chest" id="department-name-left-chest" required>
                                     <option value="none">No Department Name</option>
                                     <option value="Left Chest">Left Chest</option>
                                 </select>
                                 <div id="ccd-addon-department-name-container" class="ccd-hidden">
-                                    <input id="ccd-department-name-left-chest" name="department-name-left-chest-value" class="ccd-input" type="text" placeholder="Enter Department Name...">
+                                    <input id="ccd-department-name-left-chest" name="department_name_left_chest_value" class="ccd-input" type="text" placeholder="Enter Department Name...">
                                     <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/Department-name-left-chest.jpg'; ?>" alt="HFH Right Chest Logo">
                                 </div>
                             </div>
                         </div>
                     <?php endif; ?>
 
-
+                    <!-- Department Name Back  -->
                     <?php if (get_field('dp_name_back')): ?>
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label" for="">Add Department Name Back</label>
-                                <select class="ccd-select" name="" id="department-name-back" required>
+                                <select class="ccd-select" name="department_name_back" id="department-name-back" required>
                                     <option value="none">No Department Name</option>
                                     <option value="yes">Add Department Name - Back</option>
                                 </select>
                                 <div id="ccd-addon-department-name-back-container" class="ccd-hidden">
-                                    <input id="ccd-department-name-back" name="department-name-back-value" class="ccd-input" type="text" placeholder="Enter Department Name...">
+                                    <input id="ccd-department-name-back" name="department_name_back_value" class="ccd-input" type="text" placeholder="Enter Department Name...">
                                     <img id="ccd-department-img-back" class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/Department-name-back.jpg'; ?>" alt="HFH Right Chest Logo">
                                 </div>
                             </div>
@@ -186,6 +188,7 @@ class ProductFormRenderer {
 
         // Loop through each variation and quantity
         foreach ($quantities as $variation_id => $quantity) {
+
             // Ensure the variation ID is valid and the quantity is greater than 0
             if ($quantity > 0) {
                 // Check if the variation exists
@@ -220,6 +223,39 @@ class ProductFormRenderer {
         print_r(WC()->cart->get_cart());  // Dump the cart contents
         echo '</pre>';
     }
+
+
+
+
+    // Function to dump the submitted form fields
+    public function dump_form_fields() {
+        echo '<h3>Form Data Submitted:</h3>';
+        echo '<pre>';
+
+        // Dump the form fields (color, product options, size quantities)
+        $fields = [
+            'color' => $_POST['color'] ?? null,
+            'right_chest_screen_print' => $_POST['right_chest_screen_print'] ?? null,
+            'right_chest_embroidery' => $_POST['right_chest_embroidery'] ?? null,
+            'department_name_left_chest' => $_POST['department_name_left_chest'] ?? null,
+            'department_name_left_chest_value' => $_POST['department_name_left_chest_value'] ?? null,
+            'department_name_back' => $_POST['department_name_back'] ?? null,
+            'department_name_back_value' => $_POST['department_name_back_value'] ?? null,
+        ];
+
+        // Dump the size quantities (this loops through the submitted sizes)
+        if (isset($_POST['size_quantities']) && is_array($_POST['size_quantities'])) {
+            $fields['size_quantities'] = [];
+            foreach ($_POST['size_quantities'] as $size => $quantity) {
+                $fields['size_quantities'][$size] = $quantity;
+            }
+        }
+
+        // Print all the fields, including sizes
+        print_r($fields);
+        echo '</pre>';
+    }
+
 }
 
 ?>
