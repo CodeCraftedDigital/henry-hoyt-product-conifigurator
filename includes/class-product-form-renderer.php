@@ -113,17 +113,11 @@ class ProductFormRenderer {
                 <?php endif; ?>
 
                 <!--      Add Personalized Name Left Chest           -->
-                <?php if (get_field('right_chest_logo_em')): ?>
+                <?php if (get_field('left_chest_pn')): ?>
                     <div class="ccd-addon-container">
                         <div class="ccd-addon-item">
-                            <label class="ccd-addon-label" for="">Right Chest - Embroidery</label>
-                            <select class="ccd-select" name="" id="ccd-right-chest-logo-em" required>
-                                <option value="Blank">Blank</option>
-                                <option value="HFH Logo">HFH Logo</option>
-                            </select>
-                            <div id="ccd-addon-img-container-em" class="ccd-hidden">
-                                <img class="ccd-addon-img" src="<?php echo CCD_PLUGIN_URL . 'images/right-chest-logo.jpg'; ?>" alt="HFH Right Chest Logo">
-                            </div>
+                            <label class="ccd-addon-label" for="">Add Personalized Name Left Chest <span class="ccd-add-on-upcharge">(+8.00)</span> </label>
+                            <input name="left-chase-personal-name" class="ccd-input" type="text" placeholder="Enter Your Name...">
                         </div>
                     </div>
                 <?php endif; ?>

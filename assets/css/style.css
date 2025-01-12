@@ -89,3 +89,15 @@
 .ccd-addon-img {
     width:33%;
 }
+.ccd-add-on-upcharge {
+    color:red;
+    font-size:13px;
+}
+
+.ccd-input {
+    width: 100%;
+    padding: 8px!important;
+    font-size: 16px!important;
+    border: 1px solid #ccc!important;
+    border-radius: 5px!important;
+}
