@@ -12,49 +12,27 @@
         this.selectedColor = '';
         this.colors = [];
         this.filteredColor = null;
-
-        //Product Add Ons
-        // this.rightChestLogoEnabled = '';
         this.rightChestLogoSelectorSp = document.getElementById('ccd-right-chest-logo-sp');
         this.rightChestLogoContainerSp = document.getElementById('ccd-addon-img-container-sp');
-
         this.rightChestLogoSelectorEm = document.getElementById('ccd-right-chest-logo-em');
         this.rightChestLogoContainerEm = document.getElementById('ccd-addon-img-container-em');
-
-
         this.departmentNameLeftChestSelector = document.getElementById('department-name-left-chest');
         this.departmentNameLeftChestContainer = document.getElementById('ccd-addon-department-name-container')
         this.departmentNameLeftChestinputValue = document.getElementById('department-name-left-chest-value');
         this.departmentNameLeftChestInputName = document.getElementById('ccd-department-name-left-chest');
-
-
         this.departmentNameBackSelector = document.getElementById('department-name-back');
         this.departmentNameBackContainer = document.getElementById('ccd-addon-department-name-back-container');
         this.departmentNameBackInput = document.getElementById('ccd-department-name-back');
-
-
         this.events();
         this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
-        // this.wooGalleryImg = document.querySelector('.woocommerce-product-gallery__wrapper > div');
-        // console.log(this.wooGallery);
-
-
-
     }
 
     events() {
         this.colorOptionsSelect.addEventListener('change', (e) => {
             this.selectedColor = e.target.value;
             // console.log('Selected color:', this.selectedColor);
-            if(this.selectedColor === 'Please Choose A Color') {
-               this.stepTwoContainer.classList.add('ccd-hidden');
-            } else {
-                this.stepTwoContainer.classList.remove('ccd-hidden');
-            }
-
             // Call filter and log the filtered result
             const filtered = this.filterSelectedColor(this.selectedColor);
-
             this.buildSelectedColorSizes(filtered);
             // Woo Img
             this.currentImg = filtered.variations[0].image;
