@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: CCD Product Options
+Plugin Name: Digital Designs Product Options
 Description: Custom product options for WooCommerce (color, size, quantity).
 Version: 1.0
 Author: Your Name

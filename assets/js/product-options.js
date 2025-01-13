@@ -2,6 +2,7 @@
     constructor() {
         this.route = 'http://localhost:10319/wp-json/code/v1/get-variations/';
         this.form = document.getElementById('ccd-form');
+        this.stepTwoContainer = document.getElementById('ccd-step-two-container');
         this.parentProductID = this.form.dataset.productId;
         this.colorOptionsSelect = document.getElementById('color-options');
         this.sizeOptionsContainer = document.getElementById('ccd-size__block');
@@ -44,7 +45,12 @@
     events() {
         this.colorOptionsSelect.addEventListener('change', (e) => {
             this.selectedColor = e.target.value;
-            console.log('Selected color:', this.selectedColor);
+            // console.log('Selected color:', this.selectedColor);
+            if(this.selectedColor === 'Please Choose A Color') {
+               this.stepTwoContainer.classList.add('ccd-hidden');
+            } else {
+                this.stepTwoContainer.classList.remove('ccd-hidden');
+            }
 
             // Call filter and log the filtered result
             const filtered = this.filterSelectedColor(this.selectedColor);
@@ -52,7 +58,7 @@
             this.buildSelectedColorSizes(filtered);
             // Woo Img
             this.currentImg = filtered.variations[0].image;
-            console.log(this.currentImg);
+            // console.log(this.currentImg);
             this.wooGallery.setAttribute('data-thumb', `${this.currentImg}`)
             this.wooGallery.setAttribute('data-thumb-srcset', `${this.currentImg}`)
             this.wooGallery.classList.remove('flex-active-slide');
@@ -80,14 +86,14 @@
         if(this.departmentNameLeftChestSelector){
             this.departmentNameLeftChestSelector.addEventListener('change', (e) => {
                 this.handleDepartmentNameLeftChest(e.target.value);
-                console.log(e.target.value);
+                // console.log(e.target.value);
             });
         }
 
         if(this.departmentNameBackSelector) {
             this.departmentNameBackSelector.addEventListener('change', (e) => {
                 this.handleDepartmentNameBack(e.target.value)
-                console.log(e.target.value);
+                // console.log(e.target.value);
             });
         }
 
@@ -137,11 +143,11 @@
         try {
             const res = await fetch(`${this.route}${id}`);
             const data = await res.json();
-            console.log(data);
+            // console.log(data);
             this.colors = data;
             return data;
         } catch (e) {
-            console.log(e.message);
+            // console.log(e.message);
         }
     }
 
@@ -166,7 +172,7 @@
         this.sizeOptionsContainer.innerHTML = ''; // Clear previous sizes
 
         if (item) {
-            console.log('Available sizes for', item.color);
+            // console.log('Available sizes for', item.color);
             item.variations.forEach((variation) => {
                 // Create the wrapper for each size item
                 const sizeItem = document.createElement('div');
@@ -208,7 +214,7 @@
                 this.sizeOptionsContainer.append(sizeItem);
             });
         } else {
-            console.log('No color selected or color not found');
+            // console.log('No color selected or color not found');
         }
     }
 

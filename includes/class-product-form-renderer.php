@@ -1,8 +1,5 @@
 <?php
-/**
- * A bulletproof example to ensure only ACF-enabled fields appear
- * in the form, cart, and order details.
- */
+
 class ProductFormRenderer {
     private $product;
     private $variationsFetcher;
@@ -33,7 +30,7 @@ class ProductFormRenderer {
         wc_print_notices();
         ?>
 
-        <!-- BEGIN: Your Custom Form -->
+
         <form id="ccd-form" data-product-id="<?php echo esc_attr($product_id); ?>" method="POST">
             <!-- STEP 1: Choose Color -->
             <div>
@@ -47,6 +44,11 @@ class ProductFormRenderer {
             </div>
 
             <!-- STEP 2: Sizes & Quantities -->
+
+
+            <div id="ccd-step-two-container" class="ccd-hidden">
+
+
             <div class="ccd-size__container">
                 <div class="ccd-size__container--size-guide">
                     <div>
@@ -68,6 +70,11 @@ class ProductFormRenderer {
                     <!-- JS appends size input fields -->
                 </div>
             </div>
+
+            </div>
+
+
+            <div class="ccd-step-three-container">
 
             <!-- STEP 3: Product Options (conditionally rendered) -->
             <?php if (get_field('enable_po_section', $product_id)): ?>
@@ -195,9 +202,11 @@ class ProductFormRenderer {
                                     >
                                 </div>
                             </div>
+
                         </div>
                     <?php endif; ?>
-
+<!--                Test below-->
+                </div>
                 </div>
             <?php endif; ?>
 
