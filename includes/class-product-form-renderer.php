@@ -46,7 +46,7 @@ class ProductFormRenderer {
             <!-- STEP 2: Sizes & Quantities -->
 
 
-            <div id="ccd-step-two-container" class="ccd-hidden">
+<!--            <div id="ccd-step-two-container" class="ccd-hidden">-->
 
 
             <div class="ccd-size__container">
@@ -71,10 +71,10 @@ class ProductFormRenderer {
                 </div>
             </div>
 
-            </div>
+<!--            </div>-->
 
 
-            <div class="ccd-step-three-container">
+<!--            <div class="ccd-step-three-container">-->
 
             <!-- STEP 3: Product Options (conditionally rendered) -->
             <?php if (get_field('enable_po_section', $product_id)): ?>
@@ -206,7 +206,7 @@ class ProductFormRenderer {
                         </div>
                     <?php endif; ?>
 <!--                Test below-->
-                </div>
+<!--                </div>-->
                 </div>
             <?php endif; ?>
 
