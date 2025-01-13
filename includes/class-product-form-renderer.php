@@ -1,7 +1,7 @@
 <?php
 /**
- * Example: ProductFormRenderer with conditional "none" or typed values
- * plus upcharges only if user typed something.
+ * A bulletproof example to ensure only ACF-enabled fields appear
+ * in the form, cart, and order details.
  */
 class ProductFormRenderer {
     private $product;
@@ -23,7 +23,7 @@ class ProductFormRenderer {
 
         $product_id = $this->product->get_id();
 
-        // Hide default variation form
+        // Hide the default WC variation form
         echo '<style>
             .variations_form.cart {
                 display: none !important;
@@ -33,21 +33,20 @@ class ProductFormRenderer {
         wc_print_notices();
         ?>
 
-        <!-- BEGIN: Your exact custom form -->
+        <!-- BEGIN: Your Custom Form -->
         <form id="ccd-form" data-product-id="<?php echo esc_attr($product_id); ?>" method="POST">
-
-            <!-- Step 1: Choose Color -->
+            <!-- STEP 1: Choose Color -->
             <div>
                 <label for="color" class="ccd-form__label">
                     <span class="ccd-step-number">1</span> Choose your color
                 </label>
                 <select name="color" id="color-options" class="ccd-select" required>
                     <option value="Please Choose A Color" selected>Please Choose A Color</option>
-                    <!-- Color options will be appended here by JS -->
+                    <!-- Color options appended by JS -->
                 </select>
             </div>
 
-            <!-- Step 2: Select sizes and quantities -->
+            <!-- STEP 2: Sizes & Quantities -->
             <div class="ccd-size__container">
                 <div class="ccd-size__container--size-guide">
                     <div>
@@ -66,19 +65,19 @@ class ProductFormRenderer {
                     </div>
                 </div>
                 <div id="ccd-size__block">
-                    <!-- JS appends sizes -->
+                    <!-- JS appends size input fields -->
                 </div>
             </div>
 
-            <!-- Step 3: Product Options (Add-ons) -->
-            <?php if (get_field('enable_po_section')): ?>
+            <!-- STEP 3: Product Options (conditionally rendered) -->
+            <?php if (get_field('enable_po_section', $product_id)): ?>
                 <div class="ccd-product-options__container">
                     <label class="ccd-form__label">
                         <span class="ccd-step-number">3</span> Product Options
                     </label>
 
-                    <!-- Right Chest - Screen Print (always "Blank" or "HFH Logo") -->
-                    <?php if (get_field('right_chest_logo_sp')): ?>
+                    <!-- 1) Right Chest - Screen Print -->
+                    <?php if (get_field('right_chest_logo_sp', $product_id)): ?>
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label" for="ccd-right-chest-logo-sp">
@@ -99,8 +98,8 @@ class ProductFormRenderer {
                         </div>
                     <?php endif; ?>
 
-                    <!-- Right Chest - Embroidery (always "Blank" or "HFH Logo") -->
-                    <?php if (get_field('right_chest_logo_em')): ?>
+                    <!-- 2) Right Chest - Embroidery -->
+                    <?php if (get_field('right_chest_logo_em', $product_id)): ?>
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label" for="ccd-right-chest-logo-em">
@@ -121,9 +120,8 @@ class ProductFormRenderer {
                         </div>
                     <?php endif; ?>
 
-                    <!-- Add Personalized Name Left Chest (+8.00)
-                         => "none" if empty, typed value if not empty -->
-                    <?php if (get_field('left_chest_pn')): ?>
+                    <!-- 3) Personalized Name Left Chest (+$8) -->
+                    <?php if (get_field('left_chest_pn', $product_id)): ?>
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label">
@@ -140,11 +138,8 @@ class ProductFormRenderer {
                         </div>
                     <?php endif; ?>
 
-                    <!-- Add Department Name Left Chest (+4.00)
-                         => "none" if dropdown=none or typed field empty,
-                            typed value if "Left Chest" + text filled
-                    -->
-                    <?php if (get_field('dp_name_left_chest')): ?>
+                    <!-- 4) Department Name Left Chest (+$4) -->
+                    <?php if (get_field('dp_name_left_chest', $product_id)): ?>
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label" for="department-name-left-chest">
@@ -166,18 +161,15 @@ class ProductFormRenderer {
                                     <img
                                             class="ccd-addon-img"
                                             src="<?php echo CCD_PLUGIN_URL . 'images/Department-name-left-chest.jpg'; ?>"
-                                            alt="HFH Right Chest Logo"
+                                            alt="Department Name Left Chest"
                                     >
                                 </div>
                             </div>
                         </div>
                     <?php endif; ?>
 
-                    <!-- Add Department Name Back => "none" if "No Department Name",
-                                                     typed value otherwise
-                         (no upcharge example)
-                    -->
-                    <?php if (get_field('dp_name_back')): ?>
+                    <!-- 5) Department Name Back (no upcharge example) -->
+                    <?php if (get_field('dp_name_back', $product_id)): ?>
                         <div class="ccd-addon-container">
                             <div class="ccd-addon-item">
                                 <label class="ccd-addon-label" for="department-name-back">
@@ -216,8 +208,8 @@ class ProductFormRenderer {
     }
 
     /**
-     * Add to cart logic: store "none" if user leaves it blank,
-     * store typed value if not empty, add upcharges accordingly.
+     * add_to_cart() - only sets cart data for fields that are ACF-enabled.
+     * If field is disabled, we skip it entirely (so it won't even show "none").
      */
     private function add_to_cart($quantities) {
         if (empty($quantities)) {
@@ -225,115 +217,121 @@ class ProductFormRenderer {
             return;
         }
 
-        // Grab form inputs
-        $right_chest_screen_print       = isset($_POST['right_chest_screen_print'])
+        // Grab posted data (we won't store them unless ACF is ON)
+        $rc_screen_print     = isset($_POST['right_chest_screen_print'])
             ? sanitize_text_field($_POST['right_chest_screen_print']) : 'Blank';
-        $right_chest_embroidery         = isset($_POST['right_chest_embroidery'])
+        $rc_embroidery       = isset($_POST['right_chest_embroidery'])
             ? sanitize_text_field($_POST['right_chest_embroidery']) : 'Blank';
-        $personalized_name_left_chest   = isset($_POST['personalized_name_left_chest'])
+        $personalized_name   = isset($_POST['personalized_name_left_chest'])
             ? sanitize_text_field($_POST['personalized_name_left_chest']) : '';
-        $department_name_left_chest_opt = isset($_POST['department_name_left_chest'])
+        $dept_left_opt       = isset($_POST['department_name_left_chest'])
             ? sanitize_text_field($_POST['department_name_left_chest']) : 'none';
-        $department_name_left_chest_val = isset($_POST['department_name_left_chest_value'])
+        $dept_left_val       = isset($_POST['department_name_left_chest_value'])
             ? sanitize_text_field($_POST['department_name_left_chest_value']) : '';
-        $department_name_back_opt       = isset($_POST['department_name_back'])
+        $dept_back_opt       = isset($_POST['department_name_back'])
             ? sanitize_text_field($_POST['department_name_back']) : 'none';
-        $department_name_back_val       = isset($_POST['department_name_back_value'])
+        $dept_back_val       = isset($_POST['department_name_back_value'])
             ? sanitize_text_field($_POST['department_name_back_value']) : '';
+
+        $product_id = $this->product->get_id();
 
         foreach ($quantities as $variation_id => $quantity) {
             if ($quantity > 0) {
                 $variation = wc_get_product($variation_id);
-                if ($variation && $variation->exists() && $variation->is_in_stock()) {
-
-                    $cart_item_data = [];
-
-                    // Right Chest - Screen Print
-                    // Always store either "Blank" or "HFH Logo"
-                    if (empty($right_chest_screen_print)) {
-                        $cart_item_data['right_chest_screen_print'] = 'Blank';
-                    } else {
-                        $cart_item_data['right_chest_screen_print'] = $right_chest_screen_print;
-                    }
-
-                    // Right Chest - Embroidery
-                    if (empty($right_chest_embroidery)) {
-                        $cart_item_data['right_chest_embroidery'] = 'Blank';
-                    } else {
-                        $cart_item_data['right_chest_embroidery'] = $right_chest_embroidery;
-                    }
-
-                    // Personalized Name Left Chest (+$8 if not empty)
-                    if ($personalized_name_left_chest !== '') {
-                        // User typed something
-                        $cart_item_data['personalized_name_left_chest'] = $personalized_name_left_chest;
-                        $cart_item_data['personalized_name_left_chest_upcharge'] = 8;
-                    } else {
-                        // If empty
-                        $cart_item_data['personalized_name_left_chest'] = 'none';
-                    }
-
-                    // Department Name Left Chest (+$4 if "Left Chest" + typed value)
-                    if ($department_name_left_chest_opt === 'Left Chest' && $department_name_left_chest_val !== '') {
-                        $cart_item_data['department_name_left_chest_value'] = $department_name_left_chest_val;
-                        $cart_item_data['department_name_left_chest_upcharge'] = 4;
-                    } else {
-                        // either user selected "none" or left text blank => "none"
-                        $cart_item_data['department_name_left_chest_value'] = 'none';
-                    }
-
-                    // Department Name Back (no upcharge)
-                    // If "yes" + typed => store typed
-                    // else => "none"
-                    if ($department_name_back_opt === 'yes' && $department_name_back_val !== '') {
-                        $cart_item_data['department_name_back_value'] = $department_name_back_val;
-                    } else {
-                        $cart_item_data['department_name_back_value'] = 'none';
-                    }
-
-                    WC()->cart->add_to_cart($variation_id, $quantity, 0, [], $cart_item_data);
-                } else {
+                if (!$variation || !$variation->exists() || !$variation->is_in_stock()) {
                     wc_add_notice(__('One or more variations are invalid or out of stock.', 'ccd-product-options'), 'error');
                     return;
                 }
+
+                $cart_item_data = [];
+
+                // 1) Right Chest - Screen Print
+                if ( get_field('right_chest_logo_sp', $product_id) ) {
+                    // If user didn't pick anything, we default to "Blank."
+                    $cart_item_data['right_chest_screen_print'] = $rc_screen_print ?: 'Blank';
+                }
+
+                // 2) Right Chest - Embroidery
+                if ( get_field('right_chest_logo_em', $product_id) ) {
+                    $cart_item_data['right_chest_embroidery'] = $rc_embroidery ?: 'Blank';
+                }
+
+                // 3) Personalized Name Left Chest (+$8 if not empty)
+                if ( get_field('left_chest_pn', $product_id) ) {
+                    if ($personalized_name !== '') {
+                        $cart_item_data['personalized_name_left_chest'] = $personalized_name;
+                        $cart_item_data['personalized_name_left_chest_upcharge'] = 8;
+                    } else {
+                        // if field was offered but left blank => store "none"
+                        $cart_item_data['personalized_name_left_chest'] = 'none';
+                    }
+                }
+
+                // 4) Department Name Left Chest (+$4 if "Left Chest" + typed text)
+                if ( get_field('dp_name_left_chest', $product_id) ) {
+                    if ($dept_left_opt === 'Left Chest' && $dept_left_val !== '') {
+                        $cart_item_data['department_name_left_chest_value'] = $dept_left_val;
+                        $cart_item_data['department_name_left_chest_upcharge'] = 4;
+                    } else {
+                        // if field was offered but user selected none or typed nothing => store "none"
+                        $cart_item_data['department_name_left_chest_value'] = 'none';
+                    }
+                }
+
+                // 5) Department Name Back (no upcharge in example)
+                if ( get_field('dp_name_back', $product_id) ) {
+                    if ($dept_back_opt === 'yes' && $dept_back_val !== '') {
+                        $cart_item_data['department_name_back_value'] = $dept_back_val;
+                    } else {
+                        $cart_item_data['department_name_back_value'] = 'none';
+                    }
+                }
+
+                // Finally, add to cart
+                WC()->cart->add_to_cart($variation_id, $quantity, 0, [], $cart_item_data);
             }
         }
 
         if (WC()->cart->is_empty()) {
             wc_add_notice(__('No items were added to your cart. Please try again.', 'ccd-product-options'), 'error');
-            return;
         } else {
             wc_add_notice(__('Products added to your cart.', 'ccd-product-options'), 'success');
         }
 
-        wp_redirect(get_permalink($this->product->get_id()));
+        wp_redirect(get_permalink($product_id));
         exit;
     }
 }
 
-
-/* ======================== WOOCOMMERCE HOOKS ========================== */
+/* ======================== HOOKS & FILTERS ========================== */
 
 /**
- * 1) Capture item data if user adds to cart in other ways (optional).
- *    We'll mimic the same "none" or typed logic here for safety.
+ * If you want to bulletproof the "add to cart" outside your custom form,
+ * you can replicate the same ACF checks in this filter. If you rarely do
+ * other add-to-cart flows, it's optional. But let's be safe:
  */
 add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product_id) {
 
-    // Right Chest - Screen Print
-    if (isset($_POST['right_chest_screen_print'])) {
-        $value = sanitize_text_field($_POST['right_chest_screen_print']);
-        $cart_item_data['right_chest_screen_print'] = $value ?: 'Blank';
+    // Access the product
+    $product = wc_get_product($product_id);
+    if (!$product) {
+        return $cart_item_data;
     }
 
-    // Right Chest - Embroidery
-    if (isset($_POST['right_chest_embroidery'])) {
-        $value = sanitize_text_field($_POST['right_chest_embroidery']);
-        $cart_item_data['right_chest_embroidery'] = $value ?: 'Blank';
+    // 1) Right Chest - Screen Print
+    if ( get_field('right_chest_logo_sp', $product_id) && isset($_POST['right_chest_screen_print']) ) {
+        $value = sanitize_text_field($_POST['right_chest_screen_print']) ?: 'Blank';
+        $cart_item_data['right_chest_screen_print'] = $value;
     }
 
-    // Personalized Name Left Chest
-    if (isset($_POST['personalized_name_left_chest'])) {
+    // 2) Right Chest - Embroidery
+    if ( get_field('right_chest_logo_em', $product_id) && isset($_POST['right_chest_embroidery']) ) {
+        $value = sanitize_text_field($_POST['right_chest_embroidery']) ?: 'Blank';
+        $cart_item_data['right_chest_embroidery'] = $value;
+    }
+
+    // 3) Personalized Name Left Chest
+    if ( get_field('left_chest_pn', $product_id) && isset($_POST['personalized_name_left_chest']) ) {
         $name = sanitize_text_field($_POST['personalized_name_left_chest']);
         if ($name !== '') {
             $cart_item_data['personalized_name_left_chest'] = $name;
@@ -343,11 +341,11 @@ add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product
         }
     }
 
-    // Department Name Left Chest
-    if (isset($_POST['department_name_left_chest']) || isset($_POST['department_name_left_chest_value'])) {
-        $opt = sanitize_text_field($_POST['department_name_left_chest'] ?? 'none');
-        $val = sanitize_text_field($_POST['department_name_left_chest_value'] ?? '');
-
+    // 4) Department Name Left Chest
+    if ( get_field('dp_name_left_chest', $product_id) && isset($_POST['department_name_left_chest']) ) {
+        $opt = sanitize_text_field($_POST['department_name_left_chest']);
+        $val = isset($_POST['department_name_left_chest_value'])
+            ? sanitize_text_field($_POST['department_name_left_chest_value']) : '';
         if ($opt === 'Left Chest' && $val !== '') {
             $cart_item_data['department_name_left_chest_value'] = $val;
             $cart_item_data['department_name_left_chest_upcharge'] = 4;
@@ -356,10 +354,11 @@ add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product
         }
     }
 
-    // Department Name Back
-    if (isset($_POST['department_name_back']) || isset($_POST['department_name_back_value'])) {
-        $opt = sanitize_text_field($_POST['department_name_back'] ?? 'none');
-        $val = sanitize_text_field($_POST['department_name_back_value'] ?? '');
+    // 5) Department Name Back
+    if ( get_field('dp_name_back', $product_id) && isset($_POST['department_name_back']) ) {
+        $opt = sanitize_text_field($_POST['department_name_back']);
+        $val = isset($_POST['department_name_back_value'])
+            ? sanitize_text_field($_POST['department_name_back_value']) : '';
         if ($opt === 'yes' && $val !== '') {
             $cart_item_data['department_name_back_value'] = $val;
         } else {
@@ -370,116 +369,103 @@ add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product
     return $cart_item_data;
 }, 10, 2);
 
-
 /**
- * 2) Add upcharges to product prices before totals are calculated.
+ * Add upcharges to product prices before totals are calculated.
  */
 add_action('woocommerce_before_calculate_totals', function ($cart) {
     if (is_admin() && !defined('DOING_AJAX')) return;
 
     foreach ($cart->get_cart() as $cart_item) {
-        // Personalized Name Left Chest
+
+        // Personalized Name (+$8)
         if (isset($cart_item['personalized_name_left_chest_upcharge'])) {
             $upcharge = floatval($cart_item['personalized_name_left_chest_upcharge']);
             $cart_item['data']->set_price($cart_item['data']->get_price() + $upcharge);
         }
 
-        // Department Name Left Chest
+        // Department Name Left Chest (+$4)
         if (isset($cart_item['department_name_left_chest_upcharge'])) {
             $upcharge = floatval($cart_item['department_name_left_chest_upcharge']);
             $cart_item['data']->set_price($cart_item['data']->get_price() + $upcharge);
         }
 
-        // Department Name Back upcharge if you ever want it, e.g.:
-        // if (isset($cart_item['department_name_back_upcharge'])) {
-        //     ...
-        // }
+        // If you ever want a Department Name Back upcharge, do similarly:
+        // if (isset($cart_item['department_name_back_upcharge'])) { ... }
     }
 });
 
-
 /**
- * 3) Display the item data in the cart & checkout.
- *    We simply show whatever we stored. If we stored "none", user sees "none".
+ * Show custom data in cart/checkout.
+ * Only displays fields that exist in the cart_item data.
+ * If the code never set them, they won't appear!
  */
 add_filter('woocommerce_get_item_data', function ($item_data, $cart_item) {
 
-    // Right Chest - Screen Print
     if (isset($cart_item['right_chest_screen_print'])) {
         $item_data[] = [
             'key'   => 'Right Chest - Screen Print',
-            'value' => wc_clean($cart_item['right_chest_screen_print'])
+            'value' => wc_clean($cart_item['right_chest_screen_print']),
         ];
     }
 
-    // Right Chest - Embroidery
     if (isset($cart_item['right_chest_embroidery'])) {
         $item_data[] = [
             'key'   => 'Right Chest - Embroidery',
-            'value' => wc_clean($cart_item['right_chest_embroidery'])
+            'value' => wc_clean($cart_item['right_chest_embroidery']),
         ];
     }
 
-    // Personalized Name Left Chest
     if (isset($cart_item['personalized_name_left_chest'])) {
         $item_data[] = [
             'key'   => 'Personalized Name (Left Chest)',
-            'value' => wc_clean($cart_item['personalized_name_left_chest'])
+            'value' => wc_clean($cart_item['personalized_name_left_chest']),
         ];
     }
 
-    // Department Name Left Chest
     if (isset($cart_item['department_name_left_chest_value'])) {
         $item_data[] = [
             'key'   => 'Department Name (Left Chest)',
-            'value' => wc_clean($cart_item['department_name_left_chest_value'])
+            'value' => wc_clean($cart_item['department_name_left_chest_value']),
         ];
     }
 
-    // Department Name Back
     if (isset($cart_item['department_name_back_value'])) {
         $item_data[] = [
             'key'   => 'Department Name (Back)',
-            'value' => wc_clean($cart_item['department_name_back_value'])
+            'value' => wc_clean($cart_item['department_name_back_value']),
         ];
     }
 
     return $item_data;
 }, 10, 2);
 
-
 /**
- * 4) Store data in the order line items.
- *    Again, we show exactly what's stored ("none" or typed text).
+ * Save the data to order line items so it appears in the admin and emails.
+ * Again, only the keys we actually set appear.
  */
 add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart_item_key, $values, $order) {
 
-    // Right Chest - Screen Print
     if (isset($values['right_chest_screen_print'])) {
         $item->add_meta_data('Right Chest - Screen Print', $values['right_chest_screen_print'], true);
     }
 
-    // Right Chest - Embroidery
     if (isset($values['right_chest_embroidery'])) {
         $item->add_meta_data('Right Chest - Embroidery', $values['right_chest_embroidery'], true);
     }
 
-    // Personalized Name (Left Chest)
     if (isset($values['personalized_name_left_chest'])) {
         $item->add_meta_data('Personalized Name (Left Chest)', $values['personalized_name_left_chest'], true);
     }
 
-    // Department Name (Left Chest)
     if (isset($values['department_name_left_chest_value'])) {
         $item->add_meta_data('Department Name (Left Chest)', $values['department_name_left_chest_value'], true);
     }
 
-    // Department Name (Back)
     if (isset($values['department_name_back_value'])) {
         $item->add_meta_data('Department Name (Back)', $values['department_name_back_value'], true);
     }
 
-    // Upcharge - Personalized Name
+    // Upcharge breakdown (optional)
     if (isset($values['personalized_name_left_chest_upcharge'])) {
         $item->add_meta_data(
             'Upcharge - Personalized Name (Left Chest)',
@@ -488,7 +474,6 @@ add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart
         );
     }
 
-    // Upcharge - Department Name (Left Chest)
     if (isset($values['department_name_left_chest_upcharge'])) {
         $item->add_meta_data(
             'Upcharge - Department Name (Left Chest)',
@@ -497,5 +482,4 @@ add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart
         );
     }
 
-    // If you add a department_name_back_upcharge later, handle it here
 }, 10, 4);
