@@ -30,7 +30,7 @@ $ccd_product_options_config = [
     [
         'acf_key'      => 'left_chest_pn',
         'post_field'   => 'personalized_name_left_chest',
-        'label'        => 'Personalized Name (Left Chest)',
+        'label'        => 'Personalized Name - Left Chest',
         'type'         => 'text',
         'placeholder'  => 'Enter Your Name...',
         'upcharge'     => 8
@@ -38,7 +38,7 @@ $ccd_product_options_config = [
     [
         'acf_key'      => 'dp_name_left_chest',
         'post_field'   => 'department_name_left_chest',
-        'label'        => 'Department Name (Left Chest)',
+        'label'        => 'Department Name - Left Chest',
         'type'         => 'select-and-text',
         'choices'      => [
             'none'      => 'No Department Name',
@@ -50,13 +50,25 @@ $ccd_product_options_config = [
     [
         'acf_key'      => 'dp_name_back',
         'post_field'   => 'department_name_back',
-        'label'        => 'Department Name (Back)',
+        'label'        => 'Department Name - Back',
         'type'         => 'select-and-text',
         'choices'      => [
             'none' => 'No Department Name',
             'yes'  => 'Add Department Name - Back'
         ],
         'img_url'      => ACFWOOADDONS_PLUGIN_URL . 'assets/images/department-name-back.jpg',
+        'upcharge'     => 0
+    ],
+    [
+        'acf_key'      => 'dp_name_back_em',
+        'post_field'   => 'ddp_name_back_em',
+        'label'        => 'Department Name - Back Embroidery',
+        'type'         => 'select-and-text',
+        'choices'      => [
+            'none' => 'No Department Name',
+            'yes'  => 'Add Department Name - Back'
+        ],
+        'img_url'      => ACFWOOADDONS_PLUGIN_URL . 'assets/images/back-department-em.jpg',
         'upcharge'     => 0
     ],
 ];

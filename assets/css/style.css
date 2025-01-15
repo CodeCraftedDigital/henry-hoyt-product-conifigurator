@@ -35,6 +35,8 @@
     display:flex;
     gap:30px;
     flex-wrap:wrap;
+    margin-top:30px;
+    margin-bottom:30px;
 }
 #ccd-submit-btn {
     color:#fff;
@@ -109,4 +111,8 @@
 
 #ccd-department-img-back {
     margin-top:30px;
+}
+
+.ccd-addon-img {
+    margin-top:15px;
 }
