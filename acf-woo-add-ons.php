@@ -1,18 +1,15 @@
 <?php
 /**
- * Plugin Name: ACF Woo Add-Ons
- * Plugin URI:  https://codecrafteddigital.com
- * Description: A custom WooCommerce plugin with ACF-based product options
- * Version:     1.0.0
- * Author:      CodeCrafted Digital
+ * Plugin Name: ACF Woo Add-Ons (Dynamic Approach)
+ * Description: A fully dynamic, ACF-based WooCommerce plugin where all fields are controlled by a config array.
+ * Version:     2.0
+ * Author:      You
  * Text Domain: acf-woo-add-ons
- * Domain Path: /languages
  */
 
-// Prevent direct access to this file.
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Require the bootstrap file, which handles autoloading, config, and plugin initialization.
+// Require the bootstrap or loader file:
 require_once __DIR__ . '/bootstrap.php';

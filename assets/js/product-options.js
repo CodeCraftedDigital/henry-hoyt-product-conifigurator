@@ -1,220 +1,190 @@
- class ProductOptions {
+class ProductOptions {
     constructor() {
+        // URL for your REST endpoint
         this.route = 'http://localhost:10319/wp-json/code/v1/get-variations/';
+
+        // Grab elements
         this.form = document.getElementById('ccd-form');
-        this.stepTwoContainer = document.getElementById('ccd-step-two-container');
         this.parentProductID = this.form.dataset.productId;
+
         this.colorOptionsSelect = document.getElementById('color-options');
         this.sizeOptionsContainer = document.getElementById('ccd-size__block');
         this.sizeMainContainer = document.getElementById('ccd-size__container');
-        this.currentImg = '';
         this.addToCartBtn = document.getElementById('ccd-submit-btn');
+        this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
+
+        // For color images
         this.selectedColor = '';
         this.colors = [];
         this.filteredColor = null;
-        this.rightChestLogoSelectorSp = document.getElementById('ccd-right-chest-logo-sp');
-        this.rightChestLogoContainerSp = document.getElementById('ccd-addon-img-container-sp');
-        this.rightChestLogoSelectorEm = document.getElementById('ccd-right-chest-logo-em');
-        this.rightChestLogoContainerEm = document.getElementById('ccd-addon-img-container-em');
-        this.departmentNameLeftChestSelector = document.getElementById('department-name-left-chest');
-        this.departmentNameLeftChestContainer = document.getElementById('ccd-addon-department-name-container')
-        this.departmentNameLeftChestinputValue = document.getElementById('department-name-left-chest-value');
-        this.departmentNameLeftChestInputName = document.getElementById('ccd-department-name-left-chest');
-        this.departmentNameBackSelector = document.getElementById('department-name-back');
-        this.departmentNameBackContainer = document.getElementById('ccd-addon-department-name-back-container');
-        this.departmentNameBackInput = document.getElementById('ccd-department-name-back');
+        this.currentImg = '';
+
+        // Set up events
         this.events();
-        this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
     }
 
     events() {
+        // 1) When user changes the color, fetch the corresponding size variations
         this.colorOptionsSelect.addEventListener('change', (e) => {
             this.selectedColor = e.target.value;
-            // console.log('Selected color:', this.selectedColor);
-            // Call filter and log the filtered result
             const filtered = this.filterSelectedColor(this.selectedColor);
             this.buildSelectedColorSizes(filtered);
-            // Woo Img
-            this.currentImg = filtered.variations[0].image;
-            // console.log(this.currentImg);
-            this.wooGallery.setAttribute('data-thumb', `${this.currentImg}`)
-            this.wooGallery.setAttribute('data-thumb-srcset', `${this.currentImg}`)
-            this.wooGallery.classList.remove('flex-active-slide');
-            this.wooGallery.firstChild.setAttribute('href', `${this.currentImg}`);
-            this.wooGallery.firstChild.firstChild.setAttribute('href', `${this.currentImg}`);
-            this.wooGallery.firstChild.firstChild.setAttribute('data-src', `${this.currentImg}`);
-            this.wooGallery.firstChild.firstChild.setAttribute('data-large_image', `${this.currentImg}`);
-            this.wooGallery.firstChild.firstChild.setAttribute('srcset', `${this.currentImg}`);
-            // Handle Button State
+
+            // If there's a product image, update the gallery
+            if (filtered && filtered.variations.length > 0) {
+                this.currentImg = filtered.variations[0].image;
+                this.updateWooGalleryImage(this.currentImg);
+            }
+
             this.toggleAddToCartButton();
         });
 
-        if (this.rightChestLogoSelectorSp) {
-            this.rightChestLogoSelectorSp.addEventListener('change', (e) => {
-                this.handleRightChestLogoSp(e.target.value);
-            });
-        }
+        // 2) BIND all dynamic fields from Step 3 (with class "ccd-dynamic-field")
+        document.querySelectorAll('.ccd-dynamic-field').forEach((fieldEl) => {
+            const fieldType = fieldEl.getAttribute('data-field-type');
 
-        if(this.rightChestLogoSelectorEm) {
-            this.rightChestLogoSelectorEm.addEventListener('change', (e) => {
-                this.handleRightChestLogoEm(e.target.value);
-            });
-        }
+            // If it's a select, handle "HFH Logo" => show image or not
+            if (fieldType === 'select') {
+                fieldEl.addEventListener('change', (e) => {
+                    const val = e.target.value;
+                    const imgContainerID = `ccd-addon-img-container-${e.target.name}`;
+                    const imgDiv = document.getElementById(imgContainerID);
+                    if (imgDiv) {
+                        if (val === 'HFH Logo') {
+                            imgDiv.classList.remove('ccd-hidden');
+                        } else {
+                            imgDiv.classList.add('ccd-hidden');
+                        }
+                    }
+                });
+            }
 
-        if(this.departmentNameLeftChestSelector){
-            this.departmentNameLeftChestSelector.addEventListener('change', (e) => {
-                this.handleDepartmentNameLeftChest(e.target.value);
-                // console.log(e.target.value);
-            });
-        }
+            // If it's select-and-text
+            if (fieldType === 'select-and-text') {
+                fieldEl.addEventListener('change', (e) => {
+                    const val = e.target.value;
+                    // The hidden container is "#ccd-[post_field]-container"
+                    const containerID = `${e.target.id}-container`;
+                    const containerEl = document.getElementById(containerID);
+                    if (containerEl) {
+                        if (val === 'yes' || val === 'Left Chest') {
+                            containerEl.classList.remove('ccd-hidden');
+                            // Optionally mark input required:
+                            containerEl.querySelector('input').required = true;
+                        } else {
+                            containerEl.classList.add('ccd-hidden');
+                            containerEl.querySelector('input').required = false;
+                        }
+                    }
+                });
+            }
 
-        if(this.departmentNameBackSelector) {
-            this.departmentNameBackSelector.addEventListener('change', (e) => {
-                this.handleDepartmentNameBack(e.target.value)
-                // console.log(e.target.value);
-            });
-        }
-
+            // text type => no special logic needed unless you want something
+        });
     }
 
-     handleDepartmentNameBack(selectedOption) {
-         if (selectedOption === 'none') {
-             this.departmentNameBackContainer.classList.add('ccd-hidden');
-             this.departmentNameBackInput.required = false;
-         } else {
-             this.departmentNameBackContainer.classList.remove('ccd-hidden');
-             this.departmentNameBackInput.required = true;
-         }
-     }
+    // For updating the gallery image in Step 1
+    updateWooGalleryImage(imgUrl) {
+        if (!this.wooGallery || !imgUrl) return;
+        this.wooGallery.setAttribute('data-thumb', imgUrl);
+        this.wooGallery.setAttribute('data-thumb-srcset', imgUrl);
+        this.wooGallery.classList.remove('flex-active-slide');
 
+        if (this.wooGallery.firstChild) {
+            this.wooGallery.firstChild.setAttribute('href', imgUrl);
+            if (this.wooGallery.firstChild.firstChild) {
+                const fc = this.wooGallery.firstChild.firstChild;
+                fc.setAttribute('href', imgUrl);
+                fc.setAttribute('data-src', imgUrl);
+                fc.setAttribute('data-large_image', imgUrl);
+                fc.setAttribute('srcset', imgUrl);
+            }
+        }
+    }
 
-     handleDepartmentNameLeftChest(selectedOption) {
-         if (selectedOption === 'none') {
-             this.departmentNameLeftChestContainer.classList.add('ccd-hidden');
-             this.departmentNameLeftChestInputName.required = false;
-         } else {
-             this.departmentNameLeftChestContainer.classList.remove('ccd-hidden');
-             this.departmentNameLeftChestInputName.required = true;
-         }
-     }
-
-
-
-     handleRightChestLogoSp(selectedOption) {
-         if (selectedOption === 'HFH Logo') {
-             this.rightChestLogoContainerSp.classList.remove('ccd-hidden');
-         } else {
-             this.rightChestLogoContainerSp.classList.add('ccd-hidden');
-         }
-     }
-
-
-     handleRightChestLogoEm(selectedOption) {
-         if (selectedOption === 'HFH Logo') {
-             this.rightChestLogoContainerEm.classList.remove('ccd-hidden');
-         } else {
-             this.rightChestLogoContainerEm.classList.add('ccd-hidden');
-         }
-     }
-
+    // The color/variation logic
     async getAllAvailableColors(id) {
         try {
             const res = await fetch(`${this.route}${id}`);
             const data = await res.json();
-            // console.log(data);
             this.colors = data;
             return data;
         } catch (e) {
-            // console.log(e.message);
+            console.error('Error fetching variations:', e);
         }
     }
 
     buildSelectOptions(colors) {
-        colors.forEach((color) => {
-            const colorOptions = document.createElement('option');
-            colorOptions.setAttribute("name", `${color.color}`);
-            colorOptions.innerText = color.color;
-            colorOptions.value = color.color;
-            this.colorOptionsSelect.append(colorOptions);
+        colors.forEach((colorObj) => {
+            const opt = document.createElement('option');
+            opt.setAttribute('value', colorObj.color);
+            opt.innerText = colorObj.color;
+            this.colorOptionsSelect.append(opt);
         });
     }
 
     filterSelectedColor(selectedColor) {
-        const filtered = this.colors.filter((color) => color.color === selectedColor);
+        const filtered = this.colors.filter((c) => c.color === selectedColor);
         this.filteredColor = filtered[0] || null;
         return this.filteredColor;
     }
 
-
     buildSelectedColorSizes(item) {
-        this.sizeOptionsContainer.innerHTML = ''; // Clear previous sizes
+        this.sizeOptionsContainer.innerHTML = ''; // Clear previous
 
         if (item) {
-            // console.log('Available sizes for', item.color);
             item.variations.forEach((variation) => {
-                // Create the wrapper for each size item
+                // Container
                 const sizeItem = document.createElement('div');
                 sizeItem.classList.add('sizes__item');
 
-                // Create and append the price div
+                // Price
                 const priceDiv = document.createElement('div');
                 priceDiv.classList.add('sizes__price');
-                priceDiv.textContent = `$${variation.price}`; // Assuming price is available
+                priceDiv.textContent = `$${variation.price}`;
                 sizeItem.append(priceDiv);
 
-                // Create the box for the input (quantity)
+                // Input
                 const sizeBox = document.createElement('div');
                 sizeBox.classList.add('sizes__box');
-
                 const sizeInput = document.createElement('input');
-                sizeInput.setAttribute("type", "number");
-                sizeInput.setAttribute("name", `size_quantities[${variation.variation_id}]`);
-                sizeInput.setAttribute("min", "0");
-                sizeInput.setAttribute("step", "1");
-                sizeInput.value = 0; // Default value is 0
+                sizeInput.type = 'number';
+                sizeInput.name = `size_quantities[${variation.variation_id}]`;
+                sizeInput.min = 0;
+                sizeInput.step = 1;
+                sizeInput.value = 0;
                 sizeInput.classList.add('sizes__input');
-
-                // Add change event listener to monitor the input
                 sizeInput.addEventListener('input', () => {
-                    this.toggleAddToCartButton();  // Check the button state whenever a size input changes
+                    this.toggleAddToCartButton();
                 });
-
                 sizeBox.append(sizeInput);
                 sizeItem.append(sizeBox);
 
-                // Create and append the label for the size
+                // Label
                 const sizeLabel = document.createElement('div');
                 sizeLabel.classList.add('sizes__label');
-                sizeLabel.textContent = variation.size; // Display size name
+                sizeLabel.textContent = variation.size;
                 sizeItem.append(sizeLabel);
 
-                // Append the size item to the container
                 this.sizeOptionsContainer.append(sizeItem);
             });
-        } else {
-            // console.log('No color selected or color not found');
         }
     }
 
-    // Toggle the "Add to Cart" button based on size quantities
+    // If no size is selected, disable "Add to Cart"
     toggleAddToCartButton() {
         const sizeInputs = this.sizeOptionsContainer.querySelectorAll('.sizes__input');
-        const isAnySizeSelected = Array.from(sizeInputs).some(input => input.value > 0);
-
-        // Enable or disable the button based on quantity input values
-        if (isAnySizeSelected) {
-            this.addToCartBtn.disabled = false;
-        } else {
-            this.addToCartBtn.disabled = true;
-        }
+        const isAnySelected = Array.from(sizeInputs).some(inp => parseInt(inp.value) > 0);
+        this.addToCartBtn.disabled = !isAnySelected;
     }
 
     async init() {
         const colors = await this.getAllAvailableColors(this.parentProductID);
         this.buildSelectOptions(colors);
-        this.addToCartBtn.disabled = true;  // Disable button initially
+        this.addToCartBtn.disabled = true;
     }
 }
 
- const productOptions = new ProductOptions();
- productOptions.init();
+// Initialize
+const productOptions = new ProductOptions();
+productOptions.init();
