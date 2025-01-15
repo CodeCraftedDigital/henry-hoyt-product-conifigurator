@@ -14,7 +14,7 @@ class MainPlugin {
     private $productVariationsFetcher;
 
     public function __construct() {
-        // Instantiate variations fetcher (for your color/size REST endpoint)
+        // Instantiate your variations fetcher (for the color/size REST endpoint)
         $this->productVariationsFetcher = new ProductVariationsFetcherImplementation();
 
         // Hook up scripts, REST route, custom form
@@ -30,10 +30,10 @@ class MainPlugin {
     }
 
     /**
-     * Enqueue scripts (CSS, JS) and localize the REST route + nonce.
+     * Enqueue scripts (CSS, JS) and localize the REST route (no nonce).
      */
     public function enqueue_scripts() {
-        // (Optional) Enqueue your plugin’s stylesheet
+        // (Optional) Enqueue a plugin stylesheet
         wp_enqueue_style(
             'ccd-product-options-style',
             ACFWOOADDONS_PLUGIN_URL . 'assets/css/style.css',
@@ -41,7 +41,7 @@ class MainPlugin {
             '2.0'
         );
 
-        // Enqueue your plugin’s JS
+        // Enqueue your plugin’s main JS
         wp_enqueue_script(
             'ccd-product-options-js',
             ACFWOOADDONS_PLUGIN_URL . 'assets/js/product-options.js',
@@ -50,22 +50,21 @@ class MainPlugin {
             true
         );
 
-        // Localize script so JS can read the REST route & nonce
+        // Localize script so JS can see the REST route
+        // No nonce, because the endpoint is now public
         wp_localize_script(
             'ccd-product-options-js',
             'ccdData',
             [
-                // This typically becomes "https://yoursite.com/wp-json/code/v1/get-variations/"
+                // e.g. "https://yoursite.com/wp-json/code/v1/get-variations/"
                 'restBase' => esc_url_raw( rest_url( 'code/v1/get-variations/' ) ),
-
-                // Our nonce for extra security
-                'nonce'    => wp_create_nonce( 'ccd_rest_nonce' ),
             ]
         );
     }
 
     /**
-     * Register the custom REST route for color/size variations, using a permission callback.
+     * Register the custom REST route for color/size variations.
+     * Make it PUBLIC by setting 'permission_callback' => '__return_true'.
      */
     public function register_rest_route() {
         register_rest_route(
@@ -74,26 +73,9 @@ class MainPlugin {
             [
                 'methods'             => 'GET',
                 'callback'            => [ $this->productVariationsFetcher, 'get_product_variations' ],
-                'permission_callback' => [ $this, 'check_nonce_permission' ],
+                'permission_callback' => '__return_true', // PUBLIC - no login or nonce required
             ]
         );
-    }
-
-    /**
-     * Permission callback to verify the nonce from the request.
-     * If invalid or missing, we return a 403 Forbidden.
-     */
-    public function check_nonce_permission( $request ) {
-        // Our JS sends the nonce in the "X-WP-Nonce" header
-        $nonce = $request->get_header( 'x-wp-nonce' );
-        if ( ! $nonce || ! wp_verify_nonce( $nonce, 'ccd_rest_nonce' ) ) {
-            return new WP_Error(
-                'invalid_nonce',
-                'Invalid nonce or session expired.',
-                [ 'status' => 403 ]
-            );
-        }
-        return true; // nonce is valid
     }
 
     /**
@@ -109,13 +91,10 @@ class MainPlugin {
         $renderer->render_empty_form();
     }
 
-    /* ================================================================
-       =========== CART, ORDER, and META LOGIC (unchanged) ============
-       ================================================================ */
+    /* ------------------------------------------------------------------
+       CART, ORDER, and META LOGIC (unchanged)
+    ------------------------------------------------------------------ */
 
-    /**
-     * handle_cart_item_data
-     */
     public function handle_cart_item_data( $cart_item_data, $product_id ) {
         global $ccd_product_options_config;
 
@@ -130,10 +109,12 @@ class MainPlugin {
             }
 
             $posted_value      = isset($_POST[ $option['post_field'] ])
-                ? sanitize_text_field($_POST[ $option['post_field'] ]) : 'None';
+                ? sanitize_text_field($_POST[ $option['post_field'] ])
+                : 'None';
 
             $posted_text_value = isset($_POST[ $option['post_field'] . '_value' ])
-                ? sanitize_text_field($_POST[ $option['post_field'] . '_value' ]) : 'None';
+                ? sanitize_text_field($_POST[ $option['post_field'] . '_value' ])
+                : 'None';
 
             // Convert "blank" or empty to "None"
             if ( strtolower($posted_value) === 'blank' || $posted_value === '' ) {
@@ -171,9 +152,6 @@ class MainPlugin {
         return $cart_item_data;
     }
 
-    /**
-     * handle_upcharges
-     */
     public function handle_upcharges( $cart ) {
         if ( is_admin() && ! defined('DOING_AJAX') ) {
             return;
@@ -192,9 +170,6 @@ class MainPlugin {
         }
     }
 
-    /**
-     * display_in_cart
-     */
     public function display_in_cart( $item_data, $cart_item ) {
         global $ccd_product_options_config;
 
@@ -228,9 +203,6 @@ class MainPlugin {
         return $item_data;
     }
 
-    /**
-     * add_meta_to_order
-     */
     public function add_meta_to_order( $item, $cart_item_key, $values, $order ) {
         global $ccd_product_options_config;
 

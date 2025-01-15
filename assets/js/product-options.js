@@ -1,40 +1,41 @@
 class ProductOptions {
     constructor() {
-        // REST route from wp_localize_script
+        // Provided by wp_localize_script
         this.route = ccdData.restBase || '';
 
-        // Optional nonce if you want to send it:
-        // this.nonce = ccdData.nonce;
-
+        // Grab primary elements
         this.form = document.getElementById('ccd-form');
         this.parentProductID = this.form.dataset.productId;
 
-        // Step 1: color
+        // STEP 1: Color
         this.colorOptionsSelect = document.getElementById('color-options');
-        // Step 2: sizes
+
+        // STEP 2: Sizes
         this.sizeOptionsContainer = document.getElementById('ccd-size__block');
         this.sizeMainContainer = document.getElementById('ccd-size__container');
         this.addToCartBtn = document.getElementById('ccd-submit-btn');
-        // Product gallery
+
+        // WooCommerce product gallery
         this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
 
-        // Color logic
+        // Variables for color logic
         this.selectedColor = '';
         this.colors = [];
         this.filteredColor = null;
         this.currentImg = '';
 
+        // Initialize events
         this.events();
     }
 
     events() {
-        // 1) Color changed => fetch or filter variations
+        // 1) When color changes
         this.colorOptionsSelect.addEventListener('change', (e) => {
             this.selectedColor = e.target.value;
             const filtered = this.filterSelectedColor(this.selectedColor);
             this.buildSelectedColorSizes(filtered);
 
-            // Update main product image if available
+            // Update main image if we have a variation
             if (filtered && filtered.variations.length > 0) {
                 this.currentImg = filtered.variations[0].image;
                 this.updateWooGalleryImage(this.currentImg);
@@ -43,21 +44,19 @@ class ProductOptions {
             this.toggleAddToCartButton();
         });
 
-        // 2) Bind dynamic Step 3 fields
-        // We find all elements with class "ccd-dynamic-field" in the DOM
+        // 2) Dynamic fields for Step 3
         document.querySelectorAll('.ccd-dynamic-field').forEach((fieldEl) => {
             const fieldType = fieldEl.getAttribute('data-field-type');
-            // ID or name
-            const fieldName = fieldEl.name; // e.g. "right_chest_screen_print"
+            const fieldName = fieldEl.name; // e.g., "right_chest_screen_print"
 
-            // If it's a simple select with image, show/hide based on "HFH Logo" or "Blank"
             if (fieldType === 'select') {
+                // e.g., show/hide image container if user picks "HFH Logo"
                 fieldEl.addEventListener('change', (e) => {
                     const val = e.target.value;
-                    // Show/hide image container if present
                     const imgDivId = `ccd-addon-img-container-${fieldName}`;
                     const imgDiv = document.getElementById(imgDivId);
                     if (imgDiv) {
+                        // If they pick something that includes 'logo', show
                         if (val.toLowerCase().includes('logo')) {
                             imgDiv.classList.remove('ccd-hidden');
                         } else {
@@ -67,22 +66,19 @@ class ProductOptions {
                 });
             }
 
-            // If it's just a text input => no special logic unless you want some
             if (fieldType === 'text') {
-                // e.g. you could do some validation or char counting
+                // If you want to do something special for text fields, do it here
             }
 
-            // If it's "select-and-text" => the user picks "yes"/"Left Chest" => show text field
             if (fieldType === 'select-and-text') {
+                // e.g., "yes" => show text container, "none" => hide it
                 fieldEl.addEventListener('change', (e) => {
                     const val = e.target.value;
-                    const containerId = `${fieldEl.id}-container`; // e.g. "ccd-department_name_back-container"
+                    const containerId = `${fieldEl.id}-container`;
                     const containerEl = document.getElementById(containerId);
                     if (containerEl) {
-                        // If they pick something other than 'none', show the text field
                         if (val !== 'none') {
                             containerEl.classList.remove('ccd-hidden');
-                            // Optionally require the text input
                             const textInput = containerEl.querySelector('input[type="text"]');
                             if (textInput) {
                                 textInput.required = true;
@@ -101,14 +97,17 @@ class ProductOptions {
         });
     }
 
-    // Step 1: fetch color variations
+    // ----------------------------------------------------------------
+    // Step 1 & 2: Color + Size/Quantity
+    // ----------------------------------------------------------------
+
     async getAllAvailableColors(id) {
         try {
-            // If you want to send the nonce:
-            // const res = await fetch(`${this.route}${id}`, {
-            //   headers: { 'X-WP-Nonce': this.nonce }
-            // });
+            // Public endpoint => no nonce
             const res = await fetch(`${this.route}${id}`);
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+            }
             const data = await res.json();
             this.colors = data;
             return data;
@@ -117,6 +116,7 @@ class ProductOptions {
         }
     }
 
+    // Populate color dropdown
     buildSelectOptions(colors) {
         colors.forEach((cObj) => {
             const opt = document.createElement('option');
@@ -136,18 +136,20 @@ class ProductOptions {
         this.sizeOptionsContainer.innerHTML = '';
 
         if (item) {
-            // Sort sizes logically
+            // Sort by size in a logical order
             item.variations.sort((a, b) => this.compareSizes(a.size, b.size));
 
             item.variations.forEach((v) => {
                 const sizeItem = document.createElement('div');
                 sizeItem.classList.add('sizes__item');
 
+                // Price
                 const priceDiv = document.createElement('div');
                 priceDiv.classList.add('sizes__price');
                 priceDiv.textContent = `$${v.price}`;
                 sizeItem.append(priceDiv);
 
+                // Quantity input
                 const sizeBox = document.createElement('div');
                 sizeBox.classList.add('sizes__box');
                 const sizeInput = document.createElement('input');
@@ -160,10 +162,10 @@ class ProductOptions {
                 sizeInput.addEventListener('input', () => {
                     this.toggleAddToCartButton();
                 });
-
                 sizeBox.append(sizeInput);
                 sizeItem.append(sizeBox);
 
+                // Label for the size
                 const sizeLabel = document.createElement('div');
                 sizeLabel.classList.add('sizes__label');
                 sizeLabel.textContent = v.size;
@@ -174,14 +176,14 @@ class ProductOptions {
         }
     }
 
-    // "Logical" size sorting
+    // "Logical" size comparison: XS < S < M < L < XL < XXL < numeric < alphabetical
     compareSizes(a, b) {
         const order = ['XS','S','M','L','XL','XXL','XXXL','4XL','5XL'];
-        const aUp = a.toUpperCase();
-        const bUp = b.toUpperCase();
+        const aU = a.toUpperCase();
+        const bU = b.toUpperCase();
 
-        const iA = order.indexOf(aUp);
-        const iB = order.indexOf(bUp);
+        const iA = order.indexOf(aU);
+        const iB = order.indexOf(bU);
 
         if (iA !== -1 && iB !== -1) {
             return iA - iB;
@@ -189,21 +191,21 @@ class ProductOptions {
         if (iA !== -1 && iB === -1) return -1;
         if (iA === -1 && iB !== -1) return 1;
 
-        // Check numeric
-        const numA = parseInt(a, 10);
-        const numB = parseInt(b, 10);
-
-        if (!isNaN(numA) && !isNaN(numB)) {
-            return numA - numB;
+        // numeric?
+        const nA = parseInt(a, 10);
+        const nB = parseInt(b, 10);
+        if (!isNaN(nA) && !isNaN(nB)) {
+            return nA - nB;
         }
-        if (!isNaN(numA)) return -1;
-        if (!isNaN(numB)) return 1;
+        if (!isNaN(nA)) return -1;
+        if (!isNaN(nB)) return 1;
 
         return a.localeCompare(b);
     }
 
     updateWooGalleryImage(imgUrl) {
         if (!this.wooGallery || !imgUrl) return;
+
         this.wooGallery.setAttribute('data-thumb', imgUrl);
         this.wooGallery.setAttribute('data-thumb-srcset', imgUrl);
         this.wooGallery.classList.remove('flex-active-slide');
@@ -222,19 +224,21 @@ class ProductOptions {
 
     toggleAddToCartButton() {
         const sizeInputs = this.sizeOptionsContainer.querySelectorAll('.sizes__input');
-        const anySelected = Array.from(sizeInputs).some((inp) => parseInt(inp.value) > 0);
+        const anySelected = Array.from(sizeInputs).some(inp => parseInt(inp.value) > 0);
         this.addToCartBtn.disabled = !anySelected;
     }
 
     async init() {
+        // Fetch the colors from the public endpoint
         const colors = await this.getAllAvailableColors(this.parentProductID);
         if (colors && Array.isArray(colors)) {
             this.buildSelectOptions(colors);
         }
+        // Initially disable the "Add to Cart" button
         this.addToCartBtn.disabled = true;
     }
 }
 
-// Start it up
+// Initialize
 const productOptions = new ProductOptions();
 productOptions.init();
