@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Class ProductVariationsFetcherImplementation
  *
  * Fetches available variations for a variable product and groups them by color.
- * It checks for either `attribute_pa_color` or `attribute_pa_color_options`.
+ * It checks for either `attribute_pa_color` or `attribute_pa_color-options`.
  * If neither is found, defaults to `no-color`.
  */
 class ProductVariationsFetcherImplementation implements ProductVariationsFetcher {
@@ -21,7 +21,7 @@ class ProductVariationsFetcherImplementation implements ProductVariationsFetcher
      * get_product_variations
      *
      * Receives REST request data (contains 'product_id'), fetches variations,
-     * and returns them grouped by color (including fallback logic for color).
+     * and returns them grouped by color (including fallback logic).
      *
      * @param array $data
      * @return array|\WP_Error
@@ -49,16 +49,17 @@ class ProductVariationsFetcherImplementation implements ProductVariationsFetcher
                 ? $variation['attributes']['attribute_pa_color']
                 : '';
 
-            // 2) If empty, try "attribute_pa_color_options"
+            // 2) If empty, try "attribute_pa_color-options" (slug: color-options)
             if ( ! $color ) {
-                if ( isset( $variation['attributes']['attribute_pa_color_options'] ) && $variation['attributes']['attribute_pa_color_options'] ) {
-                    $color = $variation['attributes']['attribute_pa_color_options'];
+                if ( isset( $variation['attributes']['attribute_pa_color-options'] )
+                    && $variation['attributes']['attribute_pa_color-options'] ) {
+                    $color = $variation['attributes']['attribute_pa_color-options'];
                 } else {
                     $color = 'no-color';
                 }
             }
 
-            // 3) Size logic remains the same
+            // 3) Assume size is always "attribute_pa_size"
             $size = isset( $variation['attributes']['attribute_pa_size'] )
                 ? $variation['attributes']['attribute_pa_size']
                 : 'no-size';
