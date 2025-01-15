@@ -44,7 +44,7 @@ $ccd_product_options_config = [
             'none'      => 'No Department Name',
             'Left Chest' => 'Left Chest',
         ],
-        'img_url'      => ACFWOOADDONS_PLUGIN_URL . 'assets/images/Department-name-left-chest.jpg',
+        'img_url'      => ACFWOOADDONS_PLUGIN_URL . 'assets/images/department-name-left-chest.jpg',
         'upcharge'     => 4
     ],
     [
@@ -56,7 +56,7 @@ $ccd_product_options_config = [
             'none' => 'No Department Name',
             'yes'  => 'Add Department Name - Back'
         ],
-        'img_url'      => ACFWOOADDONS_PLUGIN_URL . 'assets/images/Department-name-back.jpg',
+        'img_url'      => ACFWOOADDONS_PLUGIN_URL . 'assets/images/department-name-back.jpg',
         'upcharge'     => 0
     ],
 ];

@@ -11,23 +11,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Class ProductVariationsFetcherImplementation
  *
- * Fetches and groups product variations by color for use in the front-end JS.
+ * Fetches available variations for a variable product and groups them by color.
+ * It checks for either `attribute_pa_color` or `attribute_pa_color_options`.
+ * If neither is found, defaults to `no-color`.
  */
 class ProductVariationsFetcherImplementation implements ProductVariationsFetcher {
 
     /**
      * get_product_variations
      *
-     * Receives REST request data (contains 'product_id'), fetches variations, and
-     * returns them grouped by color (and includes price, stock status, image, etc.).
+     * Receives REST request data (contains 'product_id'), fetches variations,
+     * and returns them grouped by color (including fallback logic for color).
      *
      * @param array $data
-     * @return array|WP_Error
+     * @return array|\WP_Error
      */
     public function get_product_variations( $data ) {
         $product_id = $data['product_id'];
         $product    = wc_get_product( $product_id );
 
+        // Validate product
         if ( ! $product || ! $product->is_type( 'variable' ) ) {
             return new WP_Error(
                 'invalid_product',
@@ -36,30 +39,43 @@ class ProductVariationsFetcherImplementation implements ProductVariationsFetcher
             );
         }
 
-        $variations         = $product->get_available_variations();
-        $grouped_variations = [];
+        // Fetch available variations
+        $variations = $product->get_available_variations();
+        $grouped    = [];
 
         foreach ( $variations as $variation ) {
-            // You can adjust attribute keys (e.g. 'attribute_pa_color') per your needs:
-            $color    = isset( $variation['attributes']['attribute_pa_color'] )
+            // 1) Attempt to get color from "attribute_pa_color"
+            $color = isset( $variation['attributes']['attribute_pa_color'] )
                 ? $variation['attributes']['attribute_pa_color']
-                : 'no-color';
+                : '';
 
-            $size     = isset( $variation['attributes']['attribute_pa_size'] )
+            // 2) If empty, try "attribute_pa_color_options"
+            if ( ! $color ) {
+                if ( isset( $variation['attributes']['attribute_pa_color_options'] ) && $variation['attributes']['attribute_pa_color_options'] ) {
+                    $color = $variation['attributes']['attribute_pa_color_options'];
+                } else {
+                    $color = 'no-color';
+                }
+            }
+
+            // 3) Size logic remains the same
+            $size = isset( $variation['attributes']['attribute_pa_size'] )
                 ? $variation['attributes']['attribute_pa_size']
                 : 'no-size';
 
-            $image_id = $variation['image_id'];
+            // 4) Image URL
+            $image_id  = $variation['image_id'];
             $image_url = $image_id ? wp_get_attachment_url( $image_id ) : '';
 
-            if ( ! isset( $grouped_variations[ $color ] ) ) {
-                $grouped_variations[ $color ] = [
+            // 5) Group by $color
+            if ( ! isset( $grouped[ $color ] ) ) {
+                $grouped[ $color ] = [
                     'color'      => $color,
                     'variations' => [],
                 ];
             }
 
-            $grouped_variations[ $color ]['variations'][] = [
+            $grouped[ $color ]['variations'][] = [
                 'variation_id' => $variation['variation_id'],
                 'size'         => $size,
                 'price'        => $variation['display_price'],
@@ -68,7 +84,7 @@ class ProductVariationsFetcherImplementation implements ProductVariationsFetcher
             ];
         }
 
-        // Return the grouped variations as an indexed array
-        return array_values( $grouped_variations );
+        // Return as an indexed array of color groups
+        return array_values( $grouped );
     }
 }
