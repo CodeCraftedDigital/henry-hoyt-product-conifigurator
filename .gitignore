@@ -1,0 +1,25 @@
+# Ignore OS-generated files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE/project files
+.idea/
+.vscode/
+
+# Ignore Node modules if you happen to have a frontend build process
+node_modules/
+
+# Composer
+/vendor/        # Typically, you do not commit the vendor folder
+# composer.lock # Optional. Many devs commit this so collaborators get the exact same versions
+
+# Ignore build artifacts
+*.log
+*.cache
+
+# Ignore compiled assets if you build them elsewhere
+#assets/css/*.css.map
+#assets/js/*.js.map
+
+# If you generate any zip builds or release artifacts
+*.zip

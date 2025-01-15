@@ -1,0 +1,15 @@
+{
+    "name": "codecrafteddigital/acf-woo-add-ons",
+    "description": "A custom WooCommerce plugin with ACF-based product options",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "CodeCraftedDigital\\ACFWooAddOns\\": "includes/"
+        }
+    },
+    "require": {
+        "php": ">=7.4"
+    },
+    "minimum-stability": "stable"
+}
