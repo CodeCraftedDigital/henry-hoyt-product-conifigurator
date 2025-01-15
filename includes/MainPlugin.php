@@ -14,15 +14,15 @@ class MainPlugin {
     private $productVariationsFetcher;
 
     public function __construct() {
-        // Instantiate your variations fetcher (for the color/size REST endpoint)
+        // Variation fetcher (for color/size REST endpoint)
         $this->productVariationsFetcher = new ProductVariationsFetcherImplementation();
 
-        // Hook up scripts, REST route, custom form
+        // Hook scripts, REST route, custom form
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
         add_action( 'rest_api_init',      [ $this, 'register_rest_route' ] );
         add_action( 'woocommerce_before_add_to_cart_form', [ $this, 'render_product_form' ], 10 );
 
-        // Cart item data & order meta
+        // Cart & order meta logic
         add_filter( 'woocommerce_add_cart_item_data', [ $this, 'handle_cart_item_data' ], 10, 2 );
         add_action( 'woocommerce_before_calculate_totals', [ $this, 'handle_upcharges' ] );
         add_filter( 'woocommerce_get_item_data', [ $this, 'display_in_cart' ], 10, 2 );
@@ -30,10 +30,26 @@ class MainPlugin {
     }
 
     /**
-     * Enqueue scripts (CSS, JS) and localize the REST route (no nonce).
+     * Enqueue scripts (CSS/JS) only if we're on a single product page AND it's variable.
      */
     public function enqueue_scripts() {
-        // (Optional) Enqueue a plugin stylesheet
+        // If not on a single product page, bail immediately
+        if ( ! is_product() ) {
+            return;
+        }
+
+        // Safely get a product object from the current post ID
+        $product_obj = wc_get_product( get_the_ID() );
+        if ( ! $product_obj ) {
+            return; // No product found
+        }
+
+        // If the product isn't variable, skip
+        if ( ! $product_obj->is_type( 'variable' ) ) {
+            return;
+        }
+
+        // Only here if it's a variable product on a single product page => enqueue scripts
         wp_enqueue_style(
             'ccd-product-options-style',
             ACFWOOADDONS_PLUGIN_URL . 'assets/css/style.css',
@@ -41,7 +57,6 @@ class MainPlugin {
             '2.0'
         );
 
-        // Enqueue your plugin’s main JS
         wp_enqueue_script(
             'ccd-product-options-js',
             ACFWOOADDONS_PLUGIN_URL . 'assets/js/product-options.js',
@@ -50,8 +65,7 @@ class MainPlugin {
             true
         );
 
-        // Localize script so JS can see the REST route
-        // No nonce, because the endpoint is now public
+        // Localize script for REST route (and anything else you need)
         wp_localize_script(
             'ccd-product-options-js',
             'ccdData',
@@ -63,8 +77,7 @@ class MainPlugin {
     }
 
     /**
-     * Register the custom REST route for color/size variations.
-     * Make it PUBLIC by setting 'permission_callback' => '__return_true'.
+     * Register the custom REST route for color/size variations (public).
      */
     public function register_rest_route() {
         register_rest_route(
@@ -73,7 +86,7 @@ class MainPlugin {
             [
                 'methods'             => 'GET',
                 'callback'            => [ $this->productVariationsFetcher, 'get_product_variations' ],
-                'permission_callback' => '__return_true', // PUBLIC - no login or nonce required
+                'permission_callback' => '__return_true', // or your custom security
             ]
         );
     }
@@ -87,18 +100,17 @@ class MainPlugin {
             return;
         }
 
-        $renderer = new ProductFormRenderer($product, $this->productVariationsFetcher);
+        $renderer = new ProductFormRenderer( $product, $this->productVariationsFetcher );
         $renderer->render_empty_form();
     }
 
-    /* ------------------------------------------------------------------
-       CART, ORDER, and META LOGIC (unchanged)
-    ------------------------------------------------------------------ */
-
+    /**
+     * Handle cart item data for custom product options.
+     */
     public function handle_cart_item_data( $cart_item_data, $product_id ) {
         global $ccd_product_options_config;
 
-        $product = wc_get_product($product_id);
+        $product = wc_get_product( $product_id );
         if ( ! $product ) {
             return $cart_item_data;
         }
@@ -152,6 +164,9 @@ class MainPlugin {
         return $cart_item_data;
     }
 
+    /**
+     * Handle upcharges before totals.
+     */
     public function handle_upcharges( $cart ) {
         if ( is_admin() && ! defined('DOING_AJAX') ) {
             return;
@@ -170,6 +185,9 @@ class MainPlugin {
         }
     }
 
+    /**
+     * Display custom item data in the cart/checkout.
+     */
     public function display_in_cart( $item_data, $cart_item ) {
         global $ccd_product_options_config;
 
@@ -203,6 +221,9 @@ class MainPlugin {
         return $item_data;
     }
 
+    /**
+     * Add custom meta to order line items so it appears in the admin/emails.
+     */
     public function add_meta_to_order( $item, $cart_item_key, $values, $order ) {
         global $ccd_product_options_config;
 

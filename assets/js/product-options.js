@@ -1,11 +1,16 @@
 class ProductOptions {
     constructor() {
-        // Provided by wp_localize_script
-        this.route = ccdData.restBase || '';
+        // Provided by wp_localize_script (MainPlugin.php)
+        this.route = (typeof ccdData !== 'undefined' && ccdData.restBase) ? ccdData.restBase : '';
 
-        // Grab primary elements
+        // Grab the main form
         this.form = document.getElementById('ccd-form');
+        // If no form found (e.g. not a variable product or custom form is disabled), bail
+        if (!this.form) return;
+
         this.parentProductID = this.form.dataset.productId;
+        // If no product ID data attribute, bail
+        if (!this.parentProductID) return;
 
         // STEP 1: Color
         this.colorOptionsSelect = document.getElementById('color-options');
@@ -18,45 +23,49 @@ class ProductOptions {
         // WooCommerce product gallery
         this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
 
-        // Variables for color logic
+        // For color-based data
         this.selectedColor = '';
         this.colors = [];
         this.filteredColor = null;
         this.currentImg = '';
 
-        // Initialize events
+        // Bind events
         this.events();
     }
 
     events() {
-        // 1) When color changes
-        this.colorOptionsSelect.addEventListener('change', (e) => {
-            this.selectedColor = e.target.value;
-            const filtered = this.filterSelectedColor(this.selectedColor);
-            this.buildSelectedColorSizes(filtered);
+        // 1) When color changes (if colorOptionsSelect is present)
+        if (this.colorOptionsSelect) {
+            this.colorOptionsSelect.addEventListener('change', (e) => {
+                this.selectedColor = e.target.value;
+                const filtered = this.filterSelectedColor(this.selectedColor);
+                this.buildSelectedColorSizes(filtered);
 
-            // Update main image if we have a variation
-            if (filtered && filtered.variations.length > 0) {
-                this.currentImg = filtered.variations[0].image;
-                this.updateWooGalleryImage(this.currentImg);
-            }
+                // Update main image if we have a variation
+                if (filtered && filtered.variations.length > 0) {
+                    this.currentImg = filtered.variations[0].image;
+                    this.updateWooGalleryImage(this.currentImg);
+                }
 
-            this.toggleAddToCartButton();
-        });
+                this.toggleAddToCartButton();
+            });
+        }
 
-        // 2) Dynamic fields for Step 3
+        // 2) Dynamic fields for Step 3 (no changes needed for new fields, just add .ccd-dynamic-field + data-field-type)
         document.querySelectorAll('.ccd-dynamic-field').forEach((fieldEl) => {
             const fieldType = fieldEl.getAttribute('data-field-type');
-            const fieldName = fieldEl.name; // e.g., "right_chest_screen_print"
+            const fieldName = fieldEl.name; // e.g. "right_chest_screen_print"
 
+            // A) If fieldType = 'select'
             if (fieldType === 'select') {
-                // e.g., show/hide image container if user picks "HFH Logo"
                 fieldEl.addEventListener('change', (e) => {
                     const val = e.target.value;
+                    // Construct an ID like #ccd-addon-img-container-[fieldName], e.g. ccd-addon-img-container-right_chest_screen_print
                     const imgDivId = `ccd-addon-img-container-${fieldName}`;
                     const imgDiv = document.getElementById(imgDivId);
+
                     if (imgDiv) {
-                        // If they pick something that includes 'logo', show
+                        // Show if they pick something with "logo" in it, otherwise hide
                         if (val.toLowerCase().includes('logo')) {
                             imgDiv.classList.remove('ccd-hidden');
                         } else {
@@ -66,25 +75,33 @@ class ProductOptions {
                 });
             }
 
+            // B) If fieldType = 'text'
             if (fieldType === 'text') {
-                // If you want to do something special for text fields, do it here
+                // If you want custom text field logic, do it here
+                // Currently no special logic, so we skip
             }
 
+            // C) If fieldType = 'select-and-text'
+            // e.g., user picks "yes"/"Left Chest" => show the container, "none" => hide
             if (fieldType === 'select-and-text') {
-                // e.g., "yes" => show text container, "none" => hide it
                 fieldEl.addEventListener('change', (e) => {
                     const val = e.target.value;
+                    // Usually the container has an ID like "[fieldEl.id]-container"
+                    // e.g. if fieldEl.id="ccd-department_name_back", containerId="ccd-department_name_back-container"
                     const containerId = `${fieldEl.id}-container`;
                     const containerEl = document.getElementById(containerId);
+
                     if (containerEl) {
                         if (val !== 'none') {
                             containerEl.classList.remove('ccd-hidden');
+                            // If there's a text input inside, require it
                             const textInput = containerEl.querySelector('input[type="text"]');
                             if (textInput) {
                                 textInput.required = true;
                             }
                         } else {
                             containerEl.classList.add('ccd-hidden');
+                            // If there's a text input, un-require and clear it
                             const textInput = containerEl.querySelector('input[type="text"]');
                             if (textInput) {
                                 textInput.required = false;
@@ -101,9 +118,11 @@ class ProductOptions {
     // Step 1 & 2: Color + Size/Quantity
     // ----------------------------------------------------------------
 
+    // GET request to our custom REST route
     async getAllAvailableColors(id) {
+        if (!this.route) return null; // No route => do nothing
+
         try {
-            // Public endpoint => no nonce
             const res = await fetch(`${this.route}${id}`);
             if (!res.ok) {
                 throw new Error(`HTTP error! Status: ${res.status}`);
@@ -113,11 +132,13 @@ class ProductOptions {
             return data;
         } catch (err) {
             console.error('Error fetching variations:', err);
+            return null;
         }
     }
 
     // Populate color dropdown
     buildSelectOptions(colors) {
+        if (!this.colorOptionsSelect) return;
         colors.forEach((cObj) => {
             const opt = document.createElement('option');
             opt.value = cObj.color;
@@ -133,6 +154,7 @@ class ProductOptions {
     }
 
     buildSelectedColorSizes(item) {
+        if (!this.sizeOptionsContainer) return;
         this.sizeOptionsContainer.innerHTML = '';
 
         if (item) {
@@ -159,13 +181,15 @@ class ProductOptions {
                 sizeInput.step = 1;
                 sizeInput.value = 0;
                 sizeInput.classList.add('sizes__input');
+
                 sizeInput.addEventListener('input', () => {
                     this.toggleAddToCartButton();
                 });
+
                 sizeBox.append(sizeInput);
                 sizeItem.append(sizeBox);
 
-                // Label for the size
+                // Label (the actual size)
                 const sizeLabel = document.createElement('div');
                 sizeLabel.classList.add('sizes__label');
                 sizeLabel.textContent = v.size;
@@ -176,7 +200,7 @@ class ProductOptions {
         }
     }
 
-    // "Logical" size comparison: XS < S < M < L < XL < XXL < numeric < alphabetical
+    // "Logical" size comparison
     compareSizes(a, b) {
         const order = ['XS','S','M','L','XL','XXL','XXXL','4XL','5XL'];
         const aU = a.toUpperCase();
@@ -191,7 +215,6 @@ class ProductOptions {
         if (iA !== -1 && iB === -1) return -1;
         if (iA === -1 && iB !== -1) return 1;
 
-        // numeric?
         const nA = parseInt(a, 10);
         const nB = parseInt(b, 10);
         if (!isNaN(nA) && !isNaN(nB)) {
@@ -205,7 +228,6 @@ class ProductOptions {
 
     updateWooGalleryImage(imgUrl) {
         if (!this.wooGallery || !imgUrl) return;
-
         this.wooGallery.setAttribute('data-thumb', imgUrl);
         this.wooGallery.setAttribute('data-thumb-srcset', imgUrl);
         this.wooGallery.classList.remove('flex-active-slide');
@@ -223,19 +245,23 @@ class ProductOptions {
     }
 
     toggleAddToCartButton() {
+        if (!this.sizeOptionsContainer || !this.addToCartBtn) return;
         const sizeInputs = this.sizeOptionsContainer.querySelectorAll('.sizes__input');
         const anySelected = Array.from(sizeInputs).some(inp => parseInt(inp.value) > 0);
         this.addToCartBtn.disabled = !anySelected;
     }
 
     async init() {
-        // Fetch the colors from the public endpoint
+        // Fetch colors from the endpoint
         const colors = await this.getAllAvailableColors(this.parentProductID);
         if (colors && Array.isArray(colors)) {
             this.buildSelectOptions(colors);
         }
-        // Initially disable the "Add to Cart" button
-        this.addToCartBtn.disabled = true;
+
+        // Initially disable add-to-cart
+        if (this.addToCartBtn) {
+            this.addToCartBtn.disabled = true;
+        }
     }
 }
 
