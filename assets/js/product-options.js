@@ -1,36 +1,40 @@
 class ProductOptions {
     constructor() {
-        // URL for your REST endpoint
-        this.route = 'http://localhost:10319/wp-json/code/v1/get-variations/';
+        // REST route from wp_localize_script
+        this.route = ccdData.restBase || '';
 
-        // Grab elements
+        // Optional nonce if you want to send it:
+        // this.nonce = ccdData.nonce;
+
         this.form = document.getElementById('ccd-form');
         this.parentProductID = this.form.dataset.productId;
 
+        // Step 1: color
         this.colorOptionsSelect = document.getElementById('color-options');
+        // Step 2: sizes
         this.sizeOptionsContainer = document.getElementById('ccd-size__block');
         this.sizeMainContainer = document.getElementById('ccd-size__container');
         this.addToCartBtn = document.getElementById('ccd-submit-btn');
+        // Product gallery
         this.wooGallery = document.querySelector('.woocommerce-product-gallery__wrapper > div');
 
-        // For color images
+        // Color logic
         this.selectedColor = '';
         this.colors = [];
         this.filteredColor = null;
         this.currentImg = '';
 
-        // Set up events
         this.events();
     }
 
     events() {
-        // 1) When user changes the color, fetch the corresponding size variations
+        // 1) Color changed => fetch or filter variations
         this.colorOptionsSelect.addEventListener('change', (e) => {
             this.selectedColor = e.target.value;
             const filtered = this.filterSelectedColor(this.selectedColor);
             this.buildSelectedColorSizes(filtered);
 
-            // If there's a product image, update the gallery
+            // Update main product image if available
             if (filtered && filtered.variations.length > 0) {
                 this.currentImg = filtered.variations[0].image;
                 this.updateWooGalleryImage(this.currentImg);
@@ -39,18 +43,22 @@ class ProductOptions {
             this.toggleAddToCartButton();
         });
 
-        // 2) BIND all dynamic fields from Step 3 (with class "ccd-dynamic-field")
+        // 2) Bind dynamic Step 3 fields
+        // We find all elements with class "ccd-dynamic-field" in the DOM
         document.querySelectorAll('.ccd-dynamic-field').forEach((fieldEl) => {
             const fieldType = fieldEl.getAttribute('data-field-type');
+            // ID or name
+            const fieldName = fieldEl.name; // e.g. "right_chest_screen_print"
 
-            // If it's a select, handle "HFH Logo" => show image or not
+            // If it's a simple select with image, show/hide based on "HFH Logo" or "Blank"
             if (fieldType === 'select') {
                 fieldEl.addEventListener('change', (e) => {
                     const val = e.target.value;
-                    const imgContainerID = `ccd-addon-img-container-${e.target.name}`;
-                    const imgDiv = document.getElementById(imgContainerID);
+                    // Show/hide image container if present
+                    const imgDivId = `ccd-addon-img-container-${fieldName}`;
+                    const imgDiv = document.getElementById(imgDivId);
                     if (imgDiv) {
-                        if (val === 'HFH Logo') {
+                        if (val.toLowerCase().includes('logo')) {
                             imgDiv.classList.remove('ccd-hidden');
                         } else {
                             imgDiv.classList.add('ccd-hidden');
@@ -59,31 +67,141 @@ class ProductOptions {
                 });
             }
 
-            // If it's select-and-text
+            // If it's just a text input => no special logic unless you want some
+            if (fieldType === 'text') {
+                // e.g. you could do some validation or char counting
+            }
+
+            // If it's "select-and-text" => the user picks "yes"/"Left Chest" => show text field
             if (fieldType === 'select-and-text') {
                 fieldEl.addEventListener('change', (e) => {
                     const val = e.target.value;
-                    // The hidden container is "#ccd-[post_field]-container"
-                    const containerID = `${e.target.id}-container`;
-                    const containerEl = document.getElementById(containerID);
+                    const containerId = `${fieldEl.id}-container`; // e.g. "ccd-department_name_back-container"
+                    const containerEl = document.getElementById(containerId);
                     if (containerEl) {
-                        if (val === 'yes' || val === 'Left Chest') {
+                        // If they pick something other than 'none', show the text field
+                        if (val !== 'none') {
                             containerEl.classList.remove('ccd-hidden');
-                            // Optionally mark input required:
-                            containerEl.querySelector('input').required = true;
+                            // Optionally require the text input
+                            const textInput = containerEl.querySelector('input[type="text"]');
+                            if (textInput) {
+                                textInput.required = true;
+                            }
                         } else {
                             containerEl.classList.add('ccd-hidden');
-                            containerEl.querySelector('input').required = false;
+                            const textInput = containerEl.querySelector('input[type="text"]');
+                            if (textInput) {
+                                textInput.required = false;
+                                textInput.value = '';
+                            }
                         }
                     }
                 });
             }
-
-            // text type => no special logic needed unless you want something
         });
     }
 
-    // For updating the gallery image in Step 1
+    // Step 1: fetch color variations
+    async getAllAvailableColors(id) {
+        try {
+            // If you want to send the nonce:
+            // const res = await fetch(`${this.route}${id}`, {
+            //   headers: { 'X-WP-Nonce': this.nonce }
+            // });
+            const res = await fetch(`${this.route}${id}`);
+            const data = await res.json();
+            this.colors = data;
+            return data;
+        } catch (err) {
+            console.error('Error fetching variations:', err);
+        }
+    }
+
+    buildSelectOptions(colors) {
+        colors.forEach((cObj) => {
+            const opt = document.createElement('option');
+            opt.value = cObj.color;
+            opt.textContent = cObj.color;
+            this.colorOptionsSelect.appendChild(opt);
+        });
+    }
+
+    filterSelectedColor(selectedColor) {
+        const filtered = this.colors.filter((c) => c.color === selectedColor);
+        this.filteredColor = filtered[0] || null;
+        return this.filteredColor;
+    }
+
+    buildSelectedColorSizes(item) {
+        this.sizeOptionsContainer.innerHTML = '';
+
+        if (item) {
+            // Sort sizes logically
+            item.variations.sort((a, b) => this.compareSizes(a.size, b.size));
+
+            item.variations.forEach((v) => {
+                const sizeItem = document.createElement('div');
+                sizeItem.classList.add('sizes__item');
+
+                const priceDiv = document.createElement('div');
+                priceDiv.classList.add('sizes__price');
+                priceDiv.textContent = `$${v.price}`;
+                sizeItem.append(priceDiv);
+
+                const sizeBox = document.createElement('div');
+                sizeBox.classList.add('sizes__box');
+                const sizeInput = document.createElement('input');
+                sizeInput.type = 'number';
+                sizeInput.name = `size_quantities[${v.variation_id}]`;
+                sizeInput.min = 0;
+                sizeInput.step = 1;
+                sizeInput.value = 0;
+                sizeInput.classList.add('sizes__input');
+                sizeInput.addEventListener('input', () => {
+                    this.toggleAddToCartButton();
+                });
+
+                sizeBox.append(sizeInput);
+                sizeItem.append(sizeBox);
+
+                const sizeLabel = document.createElement('div');
+                sizeLabel.classList.add('sizes__label');
+                sizeLabel.textContent = v.size;
+                sizeItem.append(sizeLabel);
+
+                this.sizeOptionsContainer.append(sizeItem);
+            });
+        }
+    }
+
+    // "Logical" size sorting
+    compareSizes(a, b) {
+        const order = ['XS','S','M','L','XL','XXL','XXXL','4XL','5XL'];
+        const aUp = a.toUpperCase();
+        const bUp = b.toUpperCase();
+
+        const iA = order.indexOf(aUp);
+        const iB = order.indexOf(bUp);
+
+        if (iA !== -1 && iB !== -1) {
+            return iA - iB;
+        }
+        if (iA !== -1 && iB === -1) return -1;
+        if (iA === -1 && iB !== -1) return 1;
+
+        // Check numeric
+        const numA = parseInt(a, 10);
+        const numB = parseInt(b, 10);
+
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return numA - numB;
+        }
+        if (!isNaN(numA)) return -1;
+        if (!isNaN(numB)) return 1;
+
+        return a.localeCompare(b);
+    }
+
     updateWooGalleryImage(imgUrl) {
         if (!this.wooGallery || !imgUrl) return;
         this.wooGallery.setAttribute('data-thumb', imgUrl);
@@ -102,89 +220,21 @@ class ProductOptions {
         }
     }
 
-    // The color/variation logic
-    async getAllAvailableColors(id) {
-        try {
-            const res = await fetch(`${this.route}${id}`);
-            const data = await res.json();
-            this.colors = data;
-            return data;
-        } catch (e) {
-            console.error('Error fetching variations:', e);
-        }
-    }
-
-    buildSelectOptions(colors) {
-        colors.forEach((colorObj) => {
-            const opt = document.createElement('option');
-            opt.setAttribute('value', colorObj.color);
-            opt.innerText = colorObj.color;
-            this.colorOptionsSelect.append(opt);
-        });
-    }
-
-    filterSelectedColor(selectedColor) {
-        const filtered = this.colors.filter((c) => c.color === selectedColor);
-        this.filteredColor = filtered[0] || null;
-        return this.filteredColor;
-    }
-
-    buildSelectedColorSizes(item) {
-        this.sizeOptionsContainer.innerHTML = ''; // Clear previous
-
-        if (item) {
-            item.variations.forEach((variation) => {
-                // Container
-                const sizeItem = document.createElement('div');
-                sizeItem.classList.add('sizes__item');
-
-                // Price
-                const priceDiv = document.createElement('div');
-                priceDiv.classList.add('sizes__price');
-                priceDiv.textContent = `$${variation.price}`;
-                sizeItem.append(priceDiv);
-
-                // Input
-                const sizeBox = document.createElement('div');
-                sizeBox.classList.add('sizes__box');
-                const sizeInput = document.createElement('input');
-                sizeInput.type = 'number';
-                sizeInput.name = `size_quantities[${variation.variation_id}]`;
-                sizeInput.min = 0;
-                sizeInput.step = 1;
-                sizeInput.value = 0;
-                sizeInput.classList.add('sizes__input');
-                sizeInput.addEventListener('input', () => {
-                    this.toggleAddToCartButton();
-                });
-                sizeBox.append(sizeInput);
-                sizeItem.append(sizeBox);
-
-                // Label
-                const sizeLabel = document.createElement('div');
-                sizeLabel.classList.add('sizes__label');
-                sizeLabel.textContent = variation.size;
-                sizeItem.append(sizeLabel);
-
-                this.sizeOptionsContainer.append(sizeItem);
-            });
-        }
-    }
-
-    // If no size is selected, disable "Add to Cart"
     toggleAddToCartButton() {
         const sizeInputs = this.sizeOptionsContainer.querySelectorAll('.sizes__input');
-        const isAnySelected = Array.from(sizeInputs).some(inp => parseInt(inp.value) > 0);
-        this.addToCartBtn.disabled = !isAnySelected;
+        const anySelected = Array.from(sizeInputs).some((inp) => parseInt(inp.value) > 0);
+        this.addToCartBtn.disabled = !anySelected;
     }
 
     async init() {
         const colors = await this.getAllAvailableColors(this.parentProductID);
-        this.buildSelectOptions(colors);
+        if (colors && Array.isArray(colors)) {
+            this.buildSelectOptions(colors);
+        }
         this.addToCartBtn.disabled = true;
     }
 }
 
-// Initialize
+// Start it up
 const productOptions = new ProductOptions();
 productOptions.init();

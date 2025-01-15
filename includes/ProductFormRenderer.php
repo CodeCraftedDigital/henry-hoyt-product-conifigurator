@@ -9,12 +9,6 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-/**
- * Class ProductFormRenderer
- *
- * Dynamically renders the custom product form,
- * including Step 3 which loops over $ccd_product_options_config.
- */
 class ProductFormRenderer {
 
     private $product;
@@ -30,14 +24,14 @@ class ProductFormRenderer {
             return;
         }
 
-        // If user posted size_quantities, handle adding to cart
-        if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['size_quantities']) ) {
+        // If the user POSTed "size_quantities", handle them:
+        if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['size_quantities'] ) ) {
             $this->add_to_cart( $_POST['size_quantities'] );
         }
 
         $product_id = $this->product->get_id();
 
-        // Hide default WC variation form
+        // Hide the default WC variation form
         echo '<style>
             .variations_form.cart { display: none !important; }
         </style>';
@@ -47,6 +41,7 @@ class ProductFormRenderer {
 
         <!-- START: Custom Form -->
         <form id="ccd-form" data-product-id="<?php echo esc_attr( $product_id ); ?>" method="POST">
+
             <!-- STEP 1: Choose Color -->
             <div>
                 <label for="color-options" class="ccd-form__label">
@@ -54,7 +49,7 @@ class ProductFormRenderer {
                 </label>
                 <select name="color" id="color-options" class="ccd-select" required>
                     <option value="" selected disabled>Please Choose A Color</option>
-                    <!-- JS will populate more options from the REST API -->
+                    <!-- Populated by JS via REST -->
                 </select>
             </div>
 
@@ -68,10 +63,10 @@ class ProductFormRenderer {
                     </div>
                     <div>
                         <?php
-                        // Optionally show a size guide link
+                        // If there's a size guide ACF field, show it
                         $size_guide_file = get_field( 'product_size_guide', $product_id );
-                        if ( $size_guide_file && ! empty($size_guide_file['url']) ) : ?>
-                            <a href="<?php echo esc_url($size_guide_file['url']); ?>"
+                        if ( $size_guide_file && ! empty( $size_guide_file['url'] ) ) : ?>
+                            <a href="<?php echo esc_url( $size_guide_file['url'] ); ?>"
                                target="_blank"
                                class="ccd-size-guide-btn">
                                 View Size Guide
@@ -80,135 +75,166 @@ class ProductFormRenderer {
                     </div>
                 </div>
                 <div id="ccd-size__block">
-                    <!-- JS appends the dynamic size fields here -->
+                    <!-- The JS code will append size input fields here -->
                 </div>
             </div>
 
-            <!-- STEP 3: Product Options -->
+            <!-- STEP 3: Product Options (fully dynamic) -->
             <?php
-            // If there's a master ACF toggle "enable_po_section" for Step 3, check it:
+            // If there's a master ACF toggle for the entire product-options section, check it.
             if ( get_field( 'enable_po_section', $product_id ) ) :
                 global $ccd_product_options_config;
 
-                // Check if at least one ACF option is on:
-                $has_any_option = false;
+                // Check if *any* config option is turned on
+                $any_enabled = false;
                 foreach ( $ccd_product_options_config as $opt ) {
                     if ( get_field( $opt['acf_key'], $product_id ) ) {
-                        $has_any_option = true;
+                        $any_enabled = true;
                         break;
                     }
                 }
 
-                if ( $has_any_option ) : ?>
+                if ( $any_enabled ) : ?>
                     <div class="ccd-product-options">
                         <label class="ccd-form__label">
                             <span class="ccd-step-number">3</span> Product Options
                         </label>
                         <div class="ccd-product-options__container">
                             <?php
-                            // Loop over each config item
                             foreach ( $ccd_product_options_config as $option ) :
-                                // If ACF says it's off, skip
+                                // Skip if the ACF field is off
                                 if ( ! get_field( $option['acf_key'], $product_id ) ) {
                                     continue;
                                 }
-                                // IDs and classes
+
+                                // Create IDs / data attributes for the JS
                                 $field_id   = 'ccd-' . $option['post_field'];
                                 $img_div_id = 'ccd-addon-img-container-' . $option['post_field'];
-                                ?>
 
+                                ?>
                                 <div class="ccd-addon-container">
                                     <div class="ccd-addon-item">
-                                        <label class="ccd-addon-label" for="<?php echo esc_attr($field_id); ?>">
+                                        <label
+                                                class="ccd-addon-label"
+                                                for="<?php echo esc_attr( $field_id ); ?>"
+                                        >
                                             <?php echo esc_html( $option['label'] ); ?>
                                             <?php if ( ! empty($option['upcharge']) ) : ?>
-                                                <span class="ccd-add-on-upcharge">(+$<?php echo esc_html($option['upcharge']); ?>)</span>
+                                                <span class="ccd-add-on-upcharge">
+                                                    (+$<?php echo esc_html( $option['upcharge'] ); ?>)
+                                                </span>
                                             <?php endif; ?>
                                         </label>
 
                                         <?php
+                                        // Render input based on "type" (select, text, select-and-text)
                                         switch ( $option['type'] ) {
                                             case 'select':
-                                                // Simple select
-                                                echo '<select
-                                                    class="ccd-select ccd-dynamic-field"
-                                                    name="' . esc_attr($option['post_field']) . '"
-                                                    id="' . esc_attr($field_id) . '"
-                                                    data-field-type="select"
-                                                  >';
-
-                                                foreach ( $option['choices'] as $choice ) {
-                                                    echo '<option value="' . esc_attr($choice) . '">' . esc_html($choice) . '</option>';
-                                                }
-                                                echo '</select>';
-
+                                                ?>
+                                                <select
+                                                        id="<?php echo esc_attr( $field_id ); ?>"
+                                                        name="<?php echo esc_attr( $option['post_field'] ); ?>"
+                                                        class="ccd-select ccd-dynamic-field"
+                                                        data-field-type="select"
+                                                >
+                                                    <?php
+                                                    if ( ! empty($option['choices']) && is_array($option['choices']) ) {
+                                                        foreach ( $option['choices'] as $choice ) {
+                                                            echo '<option value="' . esc_attr($choice) . '">' . esc_html($choice) . '</option>';
+                                                        }
+                                                    } else {
+                                                        // Default fallback
+                                                        echo '<option value="Blank">Blank</option>';
+                                                        echo '<option value="HFH Logo">HFH Logo</option>';
+                                                    }
+                                                    ?>
+                                                </select>
+                                                <?php
                                                 // If there's an image
-                                                if ( ! empty( $option['img_url'] ) ) {
-                                                    echo '<div id="' . esc_attr($img_div_id) . '" class="ccd-hidden">';
-                                                    echo '  <img
-                                                            class="ccd-addon-img"
-                                                            src="' . esc_url($option['img_url']) . '"
-                                                            alt="' . esc_attr($option['label']) . ' Image"
-                                                        >';
-                                                    echo '</div>';
+                                                if ( ! empty($option['img_url']) ) {
+                                                    ?>
+                                                    <div
+                                                            id="<?php echo esc_attr($img_div_id); ?>"
+                                                            class="ccd-hidden"
+                                                    >
+                                                        <img
+                                                                class="ccd-addon-img"
+                                                                src="<?php echo esc_url( $option['img_url'] ); ?>"
+                                                                alt="<?php echo esc_attr( $option['label'] ); ?>"
+                                                        >
+                                                    </div>
+                                                    <?php
                                                 }
                                                 break;
 
                                             case 'text':
-                                                // A single text input
-                                                $placeholder = isset($option['placeholder']) ? $option['placeholder'] : 'Enter value...';
-                                                echo '<input
-                                                    type="text"
-                                                    name="' . esc_attr($option['post_field']) . '"
-                                                    id="' . esc_attr($field_id) . '"
-                                                    class="ccd-input ccd-dynamic-field"
-                                                    data-field-type="text"
-                                                    placeholder="' . esc_attr($placeholder) . '"
-                                                  >';
+                                                $placeholder = isset($option['placeholder'])
+                                                    ? $option['placeholder']
+                                                    : 'Enter...';
+                                                ?>
+                                                <input
+                                                        type="text"
+                                                        id="<?php echo esc_attr( $field_id ); ?>"
+                                                        name="<?php echo esc_attr( $option['post_field'] ); ?>"
+                                                        class="ccd-input ccd-dynamic-field"
+                                                        data-field-type="text"
+                                                        placeholder="<?php echo esc_attr($placeholder); ?>"
+                                                >
+                                                <?php
                                                 break;
 
                                             case 'select-and-text':
-                                                // A select
-                                                echo '<select
-                                                    class="ccd-select ccd-dynamic-field"
-                                                    name="' . esc_attr($option['post_field']) . '"
-                                                    id="' . esc_attr($field_id) . '"
-                                                    data-field-type="select-and-text"
-                                                  >';
-
-                                                foreach ( $option['choices'] as $val => $label_choice ) {
-                                                    echo '<option value="' . esc_attr($val) . '">' . esc_html($label_choice) . '</option>';
-                                                }
-                                                echo '</select>';
-
-                                                // A hidden container w/ text input + optional image
-                                                echo '<div
-                                                    id="' . esc_attr($field_id) . '-container"
-                                                    class="ccd-hidden"
-                                                  >';
-                                                echo '  <input
-                                                        type="text"
-                                                        name="' . esc_attr($option['post_field'] . '_value') . '"
-                                                        class="ccd-input"
-                                                        placeholder="Enter detail..."
-                                                     >';
-
-                                                if ( ! empty($option['img_url']) ) {
-                                                    echo '  <img
-                                                            class="ccd-addon-img"
-                                                            src="' . esc_url($option['img_url']) . '"
-                                                            alt="' . esc_attr($option['label']) . ' Image"
-                                                        >';
-                                                }
-
-                                                echo '</div>';
+                                                ?>
+                                                <select
+                                                        id="<?php echo esc_attr( $field_id ); ?>"
+                                                        name="<?php echo esc_attr( $option['post_field'] ); ?>"
+                                                        class="ccd-select ccd-dynamic-field"
+                                                        data-field-type="select-and-text"
+                                                >
+                                                    <?php
+                                                    if ( ! empty($option['choices']) && is_array($option['choices']) ) {
+                                                        foreach ( $option['choices'] as $val => $label_text ) {
+                                                            echo '<option value="' . esc_attr($val) . '">' . esc_html($label_text) . '</option>';
+                                                        }
+                                                    } else {
+                                                        // Fallback
+                                                        echo '<option value="none">No Option</option>';
+                                                        echo '<option value="yes">Add Option</option>';
+                                                    }
+                                                    ?>
+                                                </select>
+                                                <div
+                                                        id="<?php echo esc_attr($field_id . '-container'); ?>"
+                                                        class="ccd-hidden"
+                                                >
+                                                    <input
+                                                            type="text"
+                                                            name="<?php echo esc_attr( $option['post_field'] . '_value' ); ?>"
+                                                            class="ccd-input"
+                                                            placeholder="Enter detail..."
+                                                    >
+                                                    <?php
+                                                    if ( ! empty($option['img_url']) ) {
+                                                        ?>
+                                                        <img
+                                                                class="ccd-addon-img"
+                                                                src="<?php echo esc_url($option['img_url']); ?>"
+                                                                alt="<?php echo esc_attr($option['label']); ?>"
+                                                        >
+                                                        <?php
+                                                    }
+                                                    ?>
+                                                </div>
+                                                <?php
                                                 break;
                                         } // end switch
                                         ?>
                                     </div> <!-- end .ccd-addon-item -->
                                 </div> <!-- end .ccd-addon-container -->
 
-                            <?php endforeach; ?>
+                            <?php
+                            endforeach; // end foreach $ccd_product_options_config
+                            ?>
                         </div> <!-- end .ccd-product-options__container -->
                     </div> <!-- end .ccd-product-options -->
                 <?php endif; ?>
@@ -221,11 +247,12 @@ class ProductFormRenderer {
     }
 
     /**
-     * Handle size_quantities => add variations to cart.
+     * If user posted sizes, add them to cart.
+     * The main plugin logic handles the add-ons.
      */
     private function add_to_cart( $quantities ) {
         if ( empty($quantities) ) {
-            wc_add_notice('Please select at least one variation.', 'error');
+            wc_add_notice( 'Please select at least one variation.', 'error' );
             return;
         }
 
@@ -236,18 +263,17 @@ class ProductFormRenderer {
             if ( $q > 0 ) {
                 $variation = wc_get_product($variation_id);
                 if ( ! $variation || ! $variation->exists() || ! $variation->is_in_stock() ) {
-                    wc_add_notice('One or more variations are invalid or out of stock.', 'error');
+                    wc_add_notice( 'One or more variations are invalid or out of stock.', 'error' );
                     return;
                 }
-                // Add to cart
-                WC()->cart->add_to_cart($variation_id, $q, 0, [], []);
+                WC()->cart->add_to_cart( $variation_id, $q, 0, [], [] );
             }
         }
 
         if ( WC()->cart->is_empty() ) {
-            wc_add_notice('No items were added to your cart. Please try again.', 'error');
+            wc_add_notice( 'No items were added to your cart. Please try again.', 'error' );
         } else {
-            wc_add_notice('Products added to your cart.', 'success');
+            wc_add_notice( 'Products added to your cart.', 'success' );
         }
 
         wp_redirect( get_permalink($product_id) );
